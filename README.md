@@ -10,7 +10,7 @@
 ---
 
 ## Project Overview
-DevOps demonstration project showcasing container orchestration, CI/CD pipelines, and monitoring solutions with Kubernetes, Prometheus & Grafana.
+A production-ready Todo application built to demonstrate enterprise DevOps practices. Features FastAPI backend with PostgreSQL database, Redis caching, containerized deployment, and comprehensive monitoring stack.
 
 ---
 
