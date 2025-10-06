@@ -33,21 +33,48 @@ A production-ready Todo application built to demonstrate enterprise DevOps pract
 ---
 
 ## Project Plan
-### Week 1: Foundation
+
+### 🎯 **Core Implementation (Essential)**
+
+#### Week 1: Foundation
 - Making the backend structure (Abdalrhman Magdy)
 - Making dockerfile and docker compose (Abdalrhman Magdy)
 - Kubernetes manifests creation (Ahmed Sakr, Mahmoud Hanafy)
 - CI/CD pipeline setup (Mohamed Ezzat, Safiya)
 - Security scanning integration (Abdalrhman Magdy)
 
-### Week 2: Monitoring Implementation
+#### Week 2: Monitoring Implementation
 - Prometheus metrics collection
 - Grafana dashboard creation
 - Alert management system
 - Performance testing integration
 
-### Week 3: Integration & Testing
-- End-to-end testing
-- Documentation completion
-- Final deployment and demo preparation
+#### Week 3: Production Deployment
+- Cloud deployment (AWS/Azure)
+- Load balancing setup
+- Environment management
+- Documentation and testing
 
+---
+
+### 🚀 **Advanced Features (Bonus)**
+
+#### Bonus Week 1: Infrastructure Enhancement
+- Helm Charts - Kubernetes package management
+- Infrastructure as Code - Terraform for cloud resources
+- Secrets Management - HashiCorp Vault integration
+
+#### Bonus Week 2: Service Mesh & Networking
+- Service Mesh - Istio for advanced networking
+- Network policies and security
+- Traffic management and routing
+
+#### Bonus Week 3: Observability & Performance
+- Distributed Tracing - Jaeger or Zipkin
+- Log Aggregation - ELK Stack (Elasticsearch, Logstash, Kibana)
+- APM Integration - Application Performance Monitoring
+
+#### Bonus Week 4: Automation & GitOps
+- GitOps - ArgoCD for declarative deployments
+- Auto-scaling - KEDA for event-driven scaling
+- Chatbot Integration - Slack/Teams deployment notifications
