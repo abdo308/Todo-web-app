@@ -9,18 +9,45 @@
 
 ---
 
-## 💡 Project Idea
-The **Todo Application** is a comprehensive DevOps demonstration project that showcases modern container orchestration, CI/CD pipelines, and monitoring solutions. This project implements a complete production-ready infrastructure stack including Kubernetes deployment, automated pipelines, observability with Prometheus & Grafana, and a simple frontend interface.
-
-The application serves as a practical showcase of modern DevOps practices, demonstrating how applications are built, deployed, monitored, and maintained in production environments.
+## Project Overview
+DevOps demonstration project showcasing container orchestration, CI/CD pipelines, and monitoring solutions with Kubernetes, Prometheus & Grafana.
 
 ---
 
-## 🎯 Project Objectives
+## Project Objectives
+- **Kubernetes Orchestration**: Container management with auto-scaling
+- **CI/CD Pipeline**: Automated build, test, and deployment
+- **Monitoring & Observability**: Prometheus metrics and Grafana dashboards
+- **Infrastructure as Code**: Version-controlled infrastructure management
 
-### 🚀 **Primary DevOps Objectives**
-- **⚙️ Kubernetes Orchestration**: Deploy and manage containerized applications using Kubernetes with proper resource management, networking, and scaling
-- **🔄 CI/CD Pipeline Implementation**: Automate build, test, and deployment processes using modern CI/CD tools and best practices
-- **📊 Monitoring & Observability**: Implement comprehensive monitoring with Prometheus metrics collection and Grafana visualization dashboards
-- **🏗️ Infrastructure as Code**: Manage infrastructure and deployments through code with version control and automated provisioning
+---
+
+## Project Scope
+- FastAPI backend with PostgreSQL and Redis
+- Docker containerization with multi-stage builds
+- Kubernetes deployment with health checks
+- GitHub Actions CI/CD pipeline
+- Prometheus and Grafana monitoring stack
+- Security scanning and testing automation
+
+---
+
+## Project Plan
+### Week 1: Foundation
+- Making the backend structure (Abdalrhman Magdy)
+- Making dockerfile and docker compose (Abdalrhman Magdy)
+- Kubernetes manifests creation (Ahmed Sakr, Mahmoud Hanafy)
+- CI/CD pipeline setup (Mohamed Ezzat, Safiya)
+- Security scanning integration (Abdalrhman Magdy)
+
+### Week 2: Monitoring Implementation
+- Prometheus metrics collection
+- Grafana dashboard creation
+- Alert management system
+- Performance testing integration
+
+### Week 3: Integration & Testing
+- End-to-end testing
+- Documentation completion
+- Final deployment and demo preparation
 
