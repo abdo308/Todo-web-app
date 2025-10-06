@@ -1,4 +1,4 @@
-# 📝 Todo Application - Complete DevOps Pipeline
+# 📝 Todo Application 
 
 ## Team Members
 - **Abdalrhman Magdy**  
