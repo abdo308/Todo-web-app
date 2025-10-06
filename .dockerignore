@@ -1,0 +1,32 @@
+# Don't include these in Docker image
+.env
+.env.local
+.env.production
+data/*.db
+data/*.sqlite3
+venv/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.pytest_cache/
+.coverage
+.mypy_cache/
+.DS_Store
+
+# Documentation files
+README.md
+SETUP.md
+API_ENDPOINTS.md
+
+# Docker files (not needed inside container)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Development/testing files
+*.log
+
+# Development scripts
+generate_secret.py
