@@ -5,16 +5,16 @@ pipeline {
         // Stage 1: Checkout the source code from GitHub
         stage('Checkout') {
             steps {
-                // Pulls the latest code from your specific repository
+                // Pulls the latest code from your repository
                 git 'https://github.com/abdo308/To-do-web-app-.git'
             }
         }
 
-        // Stage 2: Build the Docker image using the Dockerfile
+        // Stage 2: Build the Docker image using your multi-stage Dockerfile
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Builds the image and tags it with your Docker Hub username and app name
+                    // This command will execute your Dockerfile, creating the final production image
                     sh 'docker build . -t safiya089/todo-web-app:latest'
                 }
             }
@@ -49,7 +49,7 @@ pipeline {
                                 docker pull safiya089/todo-web-app:latest &&
                                 docker stop todo-app-container || true &&
                                 docker rm todo-app-container || true &&
-                                docker run -d --name todo-app-container -p 80:3000 safiya089/todo-web-app:latest
+                                docker run -d --name todo-app-container -p 80:8000 safiya089/todo-web-app:latest
                             "
                         '''
                     }
@@ -58,3 +58,5 @@ pipeline {
         }
     }
 }
+
+
