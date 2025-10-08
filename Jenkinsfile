@@ -2,23 +2,19 @@ pipeline {
     agent any // Run on any available Jenkins agent
 
     options {
-        // Prevent the automatic, sometimes problematic, default checkout
         skipDefaultCheckout true
     }
 
     stages {
-        // Stage 1: A controlled and clean checkout process
+        // Stage 1: Checkout
         stage('Checkout') {
             steps {
-                // First, completely clean the workspace to avoid any previous state issues
                 cleanWs()
-                
-                // Now, explicitly check out the correct branch from the repository
                 git branch: 'main', url: 'https://github.com/abdo308/To-do-web-app-.git'
             }
         }
 
-        // Stage 2: Build the Docker image
+        // Stage 2: Build Docker Image
         stage('Build Docker Image') {
             steps {
                 script {
@@ -27,13 +23,11 @@ pipeline {
             }
         }
 
-        // Stage 3: Push the image to Docker Hub
+        // Stage 3: Push to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
-                  
                     withCredentials([usernamePassword(credentialsId: 'DOCKERHUB_CREDENTIALS', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                       
                         sh 'docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"'
                         sh 'docker push safiya089/todo-web-app:latest'
                     }
@@ -41,24 +35,23 @@ pipeline {
             }
         }
 
-        // Stage 4: Deploy the new image to your EC2 server
+        // Stage 4: Deploy to Server with all Dependencies
         stage('Deploy to Server') {
             steps {
                 script {
-                    // Uses the 'SSH_SERVER_CREDENTIALS' ID from Jenkins Credentials
-                    withCredentials([sshUserPrivateKey(credentialsId: 'SSH_SERVER_CREDENTIALS', keyFileVariable: 'SSH_KEY')]) {
-                        // === IMPORTANT: REPLACE 'your_server_ip' WITH YOUR ACTUAL EC2 IP ADDRESS ===
-                        sh '''
-                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@16.171.23.59 "
-                                docker pull safiya089/todo-web-app:latest &&
-                                docker stop todo-app-container || true &&
-                                docker rm todo-app-container || true &&
-                                docker run -d --name todo-app-container -p 80:8000 safiya089/todo-web-app:latest
-                            "
-                        '''
+                    // Pull all secrets: SSH key, Database URL, Redis URL, and Secret Key
+                    withCredentials([
+                        sshUserPrivateKey(credentialsId: 'SSH_SERVER_CREDENTIALS', keyFileVariable: 'SSH_KEY'),
+                        string(credentialsId: 'DATABASE_URL', variable: 'DB_URL'),
+                        string(credentialsId: 'REDIS_URL', variable: 'RD_URL'),
+                        string(credentialsId: 'SECRET_KEY', variable: 'S_KEY')
+                    ]) {
+                       
+                        sh 'ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@16.171.23.59 "docker pull safiya089/todo-web-app:latest && docker stop todo-app-container || true && docker rm todo-app-container || true && docker run -d --name todo-app-container --network todo-net -p 80:8000 -e DATABASE_URL=\'${DB_URL}\' -e REDIS_URL=\'${RD_URL}\' -e SECRET_KEY=\'${S_KEY}\' -e ALGORITHM=HS256 -e ACCESS_TOKEN_EXPIRE_MINUTES=30 safiya089/todo-web-app:latest"'
                     }
                 }
             }
         }
     }
 }
+
