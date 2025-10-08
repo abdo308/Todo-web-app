@@ -5,7 +5,7 @@ pipeline {
         // Stage 1: Checkout the source code from GitHub
         stage('Checkout') {
             steps {
-                git 'https://github.com/abdo308/To-do-web-app-.git'
+                git branch: 'main', url: 'https://github.com/abdo308/To-do-web-app-.git'
             }
         }
 
