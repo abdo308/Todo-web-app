@@ -1,11 +1,24 @@
 pipeline {
     agent any // Run on any available Jenkins agent
 
-    stages {
-        // Stage 1 (Previously Checkout): This stage has been removed.
-        // Jenkins automatically checks out the correct branch before starting the pipeline.
+    options {
+        // Prevent the automatic, sometimes problematic, default checkout
+        skipDefaultCheckout true
+    }
 
-        // The first stage is now 'Build Docker Image'
+    stages {
+        // Stage 1: A controlled and clean checkout process
+        stage('Checkout') {
+            steps {
+                // First, completely clean the workspace to avoid any previous state issues
+                cleanWs()
+                
+                // Now, explicitly check out the correct branch from the repository
+                git branch: 'main', url: 'https://github.com/abdo308/To-do-web-app-.git'
+            }
+        }
+
+        // Stage 2: Build the Docker image
         stage('Build Docker Image') {
             steps {
                 script {
@@ -14,7 +27,7 @@ pipeline {
             }
         }
 
-        // Stage 2: Push the image to Docker Hub
+        // Stage 3: Push the image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -27,7 +40,7 @@ pipeline {
             }
         }
 
-        // Stage 3: Deploy the new image to your EC2 server
+        // Stage 4: Deploy the new image to your EC2 server
         stage('Deploy to Server') {
             steps {
                 script {
@@ -48,4 +61,3 @@ pipeline {
         }
     }
 }
-
