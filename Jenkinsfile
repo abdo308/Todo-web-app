@@ -49,7 +49,7 @@ pipeline {
                     withCredentials([sshUserPrivateKey(credentialsId: 'SSH_SERVER_CREDENTIALS', keyFileVariable: 'SSH_KEY')]) {
                         // === IMPORTANT: REPLACE 'your_server_ip' WITH YOUR ACTUAL EC2 IP ADDRESS ===
                         sh '''
-                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} root@your_server_ip "
+                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@16.171.23.59 "
                                 docker pull safiya089/todo-web-app:latest &&
                                 docker stop todo-app-container || true &&
                                 docker rm todo-app-container || true &&
