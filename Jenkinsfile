@@ -2,14 +2,10 @@ pipeline {
     agent any // Run on any available Jenkins agent
 
     stages {
-        // Stage 1: Checkout the source code from GitHub
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/abdo308/To-do-web-app-.git'
-            }
-        }
+        // Stage 1 (Previously Checkout): This stage has been removed.
+        // Jenkins automatically checks out the correct branch before starting the pipeline.
 
-        // Stage 2: Build the Docker image using the Dockerfile
+        // The first stage is now 'Build Docker Image'
         stage('Build Docker Image') {
             steps {
                 script {
@@ -18,7 +14,7 @@ pipeline {
             }
         }
 
-        // Stage 3: Push the image to Docker Hub
+        // Stage 2: Push the image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -31,15 +27,15 @@ pipeline {
             }
         }
 
-        // Stage 4: Deploy the new image to your EC2 server via SSH
+        // Stage 3: Deploy the new image to your EC2 server
         stage('Deploy to Server') {
             steps {
                 script {
-                    
+                    // Uses the 'SSH_SERVER_CREDENTIALS' ID from Jenkins Credentials
                     withCredentials([sshUserPrivateKey(credentialsId: 'SSH_SERVER_CREDENTIALS', keyFileVariable: 'SSH_KEY')]) {
-                       
-                      sh '''
-                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ubuntu@16.171.23.59 "
+                        // === IMPORTANT: REPLACE 'your_server_ip' WITH YOUR ACTUAL EC2 IP ADDRESS ===
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} root@your_server_ip "
                                 docker pull safiya089/todo-web-app:latest &&
                                 docker stop todo-app-container || true &&
                                 docker rm todo-app-container || true &&
@@ -52,5 +48,4 @@ pipeline {
         }
     }
 }
-
 
