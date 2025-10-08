@@ -31,9 +31,10 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Uses the 'DOCKERHUB_CREDENTIALS' ID from Jenkins Credentials
-                    withCredentials([string(credentialsId: 'DOCKERHUB_CREDENTIALS', variable: 'DOCKER_PASSWORD')]) {
-                        sh 'docker login -u "safiya089" -p "${DOCKER_PASSWORD}"'
+                  
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                       
+                        sh 'docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"'
                         sh 'docker push safiya089/todo-web-app:latest'
                     }
                 }
