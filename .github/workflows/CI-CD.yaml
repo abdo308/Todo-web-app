@@ -1,0 +1,48 @@
+name: To-Do web app 
+run-name: Deploy Feed Back by ${{ github.actor }} and Event is ${{ github.event_name }}
+
+on: 
+  push:
+    branches:
+      - main
+jobs:
+ CI:
+  runs-on: ubuntu-latest
+  steps:
+  - name: clone repo
+    uses: actions/checkout@v4
+  - name: Install Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.9' 
+
+  - name: Install Requirements
+    working-directory: ./
+    run: |
+      
+       pip install -r requirements.txt
+
+  - name: Test Linting 
+    working-directory: ./app
+    run: |
+      pip install flake8
+      flake8 .
+    
+
+  - name: Testing 
+    run: | 
+     pip install pytest
+     PYTHONPATH=./app pytest
+    
+  - name: docker login 
+    uses: docker/login-action@v3
+    with:
+      username: ${{ vars.DOCKERHUB_USERNAME }}
+      password: ${{ secrets.DOCKERHUB_TOKEN }}
+  - name: Build and push
+    uses: docker/build-push-action@v6
+    with:
+        context: ./project
+        push: true
+        tags: mohamedezzat1/iti-actions:${{ github.run_number }}
+ 
