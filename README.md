@@ -78,3 +78,4 @@ A production-ready Todo application built to demonstrate enterprise DevOps pract
 - GitOps - ArgoCD for declarative deployments
 - Auto-scaling - KEDA for event-driven scaling
 - Chatbot Integration - Slack/Teams deployment notifications
+Note: Deployed in http://16.171.23.59/
