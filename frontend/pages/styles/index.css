@@ -1,0 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap");
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
+  background: linear-gradient(135deg, #181c24 0%, #232a36 100%);
+}
