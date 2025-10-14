@@ -1,3 +1,45 @@
+/* Call-to-action animation for HomePage */
+.homepage-cta-animate {
+  opacity: 0;
+  animation: homepageCtaFadeIn 1.2s 0.5s forwards,
+    homepageCtaPulse 2.2s 1.7s infinite alternate;
+}
+
+@keyframes homepageCtaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes homepageCtaPulse {
+  from {
+    text-shadow: 0 0 0 #3182ce44;
+  }
+  to {
+    text-shadow: 0 0 12px #3182ce88, 0 2px 8px #bfe9ff55;
+  }
+}
+/* HomePage top-right buttons microinteractions */
+.homepage-auth-btn {
+  transition: 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.1);
+  will-change: transform;
+}
+.homepage-auth-btn:hover,
+.homepage-auth-btn:focus {
+  transform: scale(1.06) translateY(-2px);
+  box-shadow: 0 4px 18px 2px #3182ce33, 0 2px 8px rgba(49, 130, 206, 0.13);
+  z-index: 3;
+}
+.homepage-auth-btn:active {
+  transform: scale(0.97) translateY(1px);
+  box-shadow: 0 1px 4px #3182ce22;
+}
 @import url("https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap");
 
 body {
