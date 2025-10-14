@@ -1,0 +1,50 @@
+/* Project Color Palette for To-do Web App (Figma-inspired)
+------------------------------------------------------------
+
+Primary Brown:      #5c4742;
+Beige (Background): #f6ede7;
+Accent Red:         #e07a5f;
+Light Gray:         #f9f6f2;
+Card White:         #fff;
+Shadow Brown:       rgba(92, 71, 66, 0.13);
+Muted Gray:         #bfc9d9;
+Illustration Blue:  #e0e7ef;
+Text Main:          #4a3b36;
+Text Muted:         #7a6e6e;
+Button Hover:       #b8563b;
+
+/* Usage Example:
+   background: var(--palette-beige);
+   color: var(--palette-primary-brown);
+*/
+
+:root {
+  --palette-primary-brown: #5c4742;
+  --palette-beige: #f6ede7;
+  --palette-accent-red: #e07a5f;
+  --palette-light-gray: #f9f6f2;
+  --palette-card-white: #fff;
+  --palette-shadow-brown: rgba(92, 71, 66, 0.13);
+  --palette-muted-gray: #bfc9d9;
+  --palette-illustration-blue: #e0e7ef;
+  --palette-text-main: #4a3b36;
+  --palette-text-muted: #7a6e6e;
+  --palette-button-hover: #b8563b;
+}
+
+/* Dark mode palette */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --palette-primary-brown: #e6d6cf;
+    --palette-beige: #2a2320;
+    --palette-accent-red: #ffb4a2;
+    --palette-light-gray: #2d2623;
+    --palette-card-white: #23201e;
+    --palette-shadow-brown: rgba(230, 214, 207, 0.13);
+    --palette-muted-gray: #6c5c54;
+    --palette-illustration-blue: #3a3f4a;
+    --palette-text-main: #f6ede7;
+    --palette-text-muted: #bfaea6;
+    --palette-button-hover: #e07a5f;
+  }
+}
