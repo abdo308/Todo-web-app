@@ -35,11 +35,10 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, taskTitle }) {
         <div className="delete-modal-body">
           <div className="delete-icon">🗑️</div>
           <p className="delete-message">
-            Are you sure you want to delete the task <strong>"{taskTitle}"</strong>?
+            Are you sure you want to delete the task{" "}
+            <strong>"{taskTitle}"</strong>?
           </p>
-          <p className="delete-warning">
-            This action cannot be undone.
-          </p>
+          <p className="delete-warning">This action cannot be undone.</p>
         </div>
 
         <div className="delete-modal-actions">
