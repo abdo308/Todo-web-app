@@ -10,6 +10,14 @@ function DashboardPage() {
   const [editingTask, setEditingTask] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  const handleLogout = () => {
+    // Clear any stored authentication data
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    // Redirect to login page
+    window.location.href = "/login";
+  };
+
   const handleAddTask = (taskData) => {
     console.log("New task added:", taskData);
     // Here you would typically add the task to your state or send it to a backend
@@ -143,21 +151,13 @@ function DashboardPage() {
             <span className="nav-icon">📋</span>
             <span className="nav-text">My Task</span>
           </a>
-          <a href="#" className="nav-item">
-            <span className="nav-icon">📂</span>
-            <span className="nav-text">Task Categories</span>
-          </a>
-          <a href="#" className="nav-item">
+          <a href="/profile" className="nav-item">
             <span className="nav-icon">⚙️</span>
-            <span className="nav-text">Settings</span>
-          </a>
-          <a href="#" className="nav-item">
-            <span className="nav-icon">❓</span>
-            <span className="nav-text">Help</span>
+            <span className="nav-text">Profile</span>
           </a>
         </nav>
 
-        <button className="logout-btn">
+        <button className="logout-btn" onClick={handleLogout}>
           <span className="nav-icon">🚪</span>
           <span className="nav-text">Logout</span>
         </button>
