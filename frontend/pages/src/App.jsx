@@ -8,6 +8,9 @@ import {
 import LoginPage from "./LoginPage";
 import SignupPage from "./SignupPage";
 import HomePage from "./HomePage";
+import DashboardPage from "./DashboardPage";
+import MyTaskPage from "./MyTaskPage";
+import VitalTaskPage from "./VitalTaskPage";
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/mytask" element={<MyTaskPage />} />
+        <Route path="/vitaltask" element={<VitalTaskPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

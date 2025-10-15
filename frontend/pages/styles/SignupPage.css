@@ -121,7 +121,7 @@
   border-radius: 8px;
   cursor: pointer;
   margin-top: 8px;
-  transition: background 0.2s;
+  transition: 0.2s;
 }
 .signup-btn:hover {
   background: var(--palette-button-hover, #b8563b);
