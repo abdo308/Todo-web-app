@@ -1,122 +1,267 @@
-/* HomePage Root */
-.homepage-root {
+@import url("./palette.css");
+
+/* HomePage - Modern Styles to match Login/Signup */
+.homepage-bg {
   min-height: 100vh;
   width: 100vw;
-  position: relative;
-  overflow: hidden;
-  font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
-  color: #232a36;
-}
-
-/* Animated SVG background */
-.homepage-bg-svg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Top-right login/signup bar */
-.homepage-auth-bar {
-  position: absolute;
-  top: 32px;
-  right: 48px;
-  z-index: 2;
+  background: #f7f7fa
+    url("https://www.transparenttextures.com/patterns/symphony.png");
   display: flex;
-  gap: 1.2rem;
+  align-items: center;
+  justify-content: center;
+  font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
+  padding: 2rem;
+}
+
+.homepage-main {
+  display: flex;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(92, 71, 66, 0.13),
+    0 1.5px 8px 0 rgba(92, 71, 66, 0.06);
+  overflow: hidden;
+  max-width: 1200px;
+  width: 100%;
+  min-height: 600px;
+}
+
+.homepage-illustration-col {
+  flex: 1 1 400px;
+  background: #f7f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 600px;
+  padding: 3rem 2.5rem;
+}
+
+.homepage-illustration {
+  width: 90%;
+  max-width: 350px;
+  height: auto;
+  animation: float-illustration 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes float-illustration {
+  0% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 2px 8px #e07a5f22);
+  }
+  60% {
+    transform: translateY(-16px) scale(1.03);
+    filter: drop-shadow(0 8px 24px #e07a5f33);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 2px 8px #e07a5f22);
+  }
+}
+
+.homepage-content-col {
+  flex: 1 1 500px;
+  padding: 3rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+  position: relative;
+}
+
+.homepage-auth-buttons {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
 }
 
 .homepage-auth-btn {
-  transition: 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.1);
-  will-change: transform;
-  padding: 0.6rem 1.3rem;
-  border-radius: 6px;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
   text-decoration: none;
   font-weight: 500;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  border: 1.5px solid #e07a5f;
 }
+
 .homepage-login-btn {
-  background: #3182ce;
+  background: transparent;
+  color: #e07a5f;
+}
+
+.homepage-signup-btn {
+  background: #e07a5f;
   color: #fff;
 }
-.homepage-signup-btn {
-  background: #fff;
-  color: #3182ce;
-  border: 1.5px solid #3182ce;
-}
-.homepage-auth-btn:hover,
-.homepage-auth-btn:focus {
-  transform: scale(1.06) translateY(-2px);
-  box-shadow: 0 4px 18px 2px #3182ce33, 0 2px 8px rgba(49, 130, 206, 0.13);
-  z-index: 3;
-}
-.homepage-auth-btn:active {
-  transform: scale(0.97) translateY(1px);
-  box-shadow: 0 1px 4px #3182ce22;
+
+.homepage-auth-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(224, 122, 95, 0.3);
 }
 
-/* Centered content */
-.homepage-center-content {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  position: relative;
+.homepage-login-btn:hover {
+  background: #e07a5f;
+  color: #fff;
 }
 
-.homepage-logo {
-  margin-bottom: 0.5rem;
+.homepage-welcome-section {
+  margin-top: 2rem;
 }
 
 .homepage-title {
-  font-size: 2.7rem;
+  font-size: 2.5rem;
   font-weight: 700;
-  margin-bottom: 1.1rem;
-  color: #232a36;
-  text-shadow: 0 2px 16px #fff7, 0 1.5px 8px #bfe9ff55;
+  color: #4a3b36;
+  margin-bottom: 1.5rem;
+  text-align: left;
 }
 
-.homepage-desc {
-  font-size: 1.22rem;
-  margin-bottom: 2.2rem;
-  max-width: 420px;
+.homepage-description {
+  font-size: 1.1rem;
+  color: #7a6e6e;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.homepage-features {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.homepage-feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  color: #232a36;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 12px;
-  padding: 1.1rem 1.5rem;
-  box-shadow: 0 2px 12px #bfe9ff33;
+  flex: 1;
 }
 
-/* Call-to-action animation for HomePage */
-.homepage-cta-animate {
-  color: #3182ce;
+.homepage-feature-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  background: #f9f6f2;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid #e07a5f22;
+}
+
+.homepage-feature-text {
+  font-size: 0.95rem;
   font-weight: 500;
-  opacity: 0;
-  animation: homepageCtaFadeIn 1.2s 0.5s forwards,
-    homepageCtaPulse 2.2s 1.7s infinite alternate;
+  color: #4a3b36;
 }
-@keyframes homepageCtaFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.98);
+
+.homepage-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.homepage-cta-btn {
+  padding: 1rem 2.5rem;
+  background: #e07a5f;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px #e07a5f22;
+}
+
+.homepage-cta-btn:hover {
+  background: #b8563b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px #e07a5f33;
+}
+
+.homepage-cta-text {
+  font-size: 1rem;
+  color: #7a6e6e;
+}
+
+.homepage-cta-text a {
+  color: #e07a5f;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.homepage-cta-text a:hover {
+  color: #b8563b;
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .homepage-main {
+    flex-direction: column;
+    max-width: 600px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+
+  .homepage-illustration-col {
+    order: 2;
+    min-height: 300px;
+  }
+
+  .homepage-content-col {
+    order: 1;
+    padding: 2rem;
+  }
+
+  .homepage-auth-buttons {
+    position: relative;
+    top: 0;
+    right: 0;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  .homepage-features {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .homepage-title {
+    font-size: 2rem;
+    text-align: center;
+  }
+
+  .homepage-description {
+    text-align: center;
+  }
+
+  .homepage-cta {
+    align-items: center;
+    text-align: center;
   }
 }
-@keyframes homepageCtaPulse {
-  from {
-    text-shadow: 0 0 0 #3182ce44;
+
+@media (max-width: 600px) {
+  .homepage-bg {
+    padding: 1rem;
   }
-  to {
-    text-shadow: 0 0 12px #3182ce88, 0 2px 8px #bfe9ff55;
+
+  .homepage-main {
+    border-radius: 12px;
+  }
+
+  .homepage-content-col {
+    padding: 1.5rem;
+  }
+
+  .homepage-illustration-col {
+    padding: 2rem 1.5rem;
+    display: none;
+  }
+
+  .homepage-auth-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }

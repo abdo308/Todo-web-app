@@ -2,102 +2,58 @@ import "../styles/HomePage.css";
 
 function HomePage() {
   return (
-    <div className="homepage-root">
-      {/* Animated SVG background, compatible with project style */}
-      <svg
-        className="homepage-bg-svg"
-        viewBox="0 0 1440 900"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <linearGradient id="homeGradient1" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#6dd5ed" />
-            <stop offset="100%" stopColor="#f7797d" />
-          </linearGradient>
-          <linearGradient id="homeGradient2" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#bfe9ff" />
-            <stop offset="100%" stopColor="#fbc2eb" />
-          </linearGradient>
-        </defs>
-        <g>
-          <path opacity="0.7">
-            <animate
-              attributeName="d"
-              dur="16s"
-              repeatCount="indefinite"
-              values="M0,800 Q480,850 960,800 T1440,800 V900 H0Z;
-                      M0,800 Q480,750 960,800 T1440,800 V900 H0Z;
-                      M0,800 Q480,850 960,800 T1440,800 V900 H0Z"
-            />
-            <animate
-              attributeName="fill"
-              values="url(#homeGradient2);url(#homeGradient1);url(#homeGradient2)"
-              dur="16s"
-              repeatCount="indefinite"
-            />
-          </path>
-          <path>
-            <animate
-              attributeName="d"
-              dur="12s"
-              repeatCount="indefinite"
-              values="M0,700 Q360,600 720,700 T1440,700 V900 H0Z;
-                      M0,700 Q360,800 720,700 T1440,700 V900 H0Z;
-                      M0,700 Q360,600 720,700 T1440,700 V900 H0Z"
-            />
-            <animate
-              attributeName="fill"
-              values="url(#homeGradient1);url(#homeGradient2);url(#homeGradient1)"
-              dur="12s"
-              repeatCount="indefinite"
-            />
-          </path>
-        </g>
-      </svg>
-      {/* Top-right login/signup buttons */}
-      <div className="homepage-auth-bar">
-        <a href="/login" className="homepage-auth-btn homepage-login-btn">
-          Log In
-        </a>
-        <a href="/signup" className="homepage-auth-btn homepage-signup-btn">
-          Sign Up
-        </a>
-      </div>
-      {/* Centered content with logo */}
-      <div className="homepage-center-content">
-        {/* Logo above the title */}
-        <svg
-          width="56"
-          height="56"
-          viewBox="0 0 44 44"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="homepage-logo"
-        >
-          <circle cx="22" cy="22" r="22" fill="url(#logoGradient)" />
-          <defs>
-            <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#6dd5ed" />
-              <stop offset="100%" stopColor="#f7797d" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M14 23.5L20 29L30 17"
-            stroke="#fff"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+    <div className="homepage-bg">
+      <div className="homepage-main">
+        <div className="homepage-illustration-col">
+          <img
+            className="homepage-illustration"
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjlGNkYyIi8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iODAiIGZpbGw9IiNFMDdBNUYiIGZpbGwtb3BhY2l0eT0iMC4xIi8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNjAiIGZpbGw9IiNFMDdBNUYiIGZpbGwtb3BhY2l0eT0iMC4yIi8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNDAiIGZpbGw9IiNFMDdBNUYiLz4KPHN2ZyB4PSIxNzUiIHk9IjEyNSIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiPgo8cGF0aCBkPSJNOSAxNkwxNCAyMUwyMiA4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4KPC9zdmc+"
+            alt="Todo App Illustration"
           />
-        </svg>
-        <h1 className="homepage-title">Welcome to the Todo App</h1>
-        <p className="homepage-desc">
-          Organize your tasks, boost your productivity, and stay on top of your
-          goals.
-          <br />
-          <span className="homepage-cta-animate">
-            Sign up or log in to get started!
-          </span>
-        </p>
+        </div>
+        <div className="homepage-content-col">
+          <div className="homepage-auth-buttons">
+            <a href="/login" className="homepage-auth-btn homepage-login-btn">
+              Log In
+            </a>
+            <a href="/signup" className="homepage-auth-btn homepage-signup-btn">
+              Sign Up
+            </a>
+          </div>
+
+          <div className="homepage-welcome-section">
+            <h1 className="homepage-title">Welcome to Todo App</h1>
+            <p className="homepage-description">
+              Organize your tasks, boost your productivity, and stay on top of
+              your goals. Join thousands of users who trust our platform to
+              manage their daily tasks efficiently.
+            </p>
+
+            <div className="homepage-features">
+              <div className="homepage-feature">
+                <span className="homepage-feature-icon">📝</span>
+                <span className="homepage-feature-text">Create Tasks</span>
+              </div>
+              <div className="homepage-feature">
+                <span className="homepage-feature-icon">⚡</span>
+                <span className="homepage-feature-text">Set Priorities</span>
+              </div>
+              <div className="homepage-feature">
+                <span className="homepage-feature-icon">✅</span>
+                <span className="homepage-feature-text">Track Progress</span>
+              </div>
+            </div>
+
+            <div className="homepage-cta">
+              <a href="/signup" className="homepage-cta-btn">
+                Get Started Free
+              </a>
+              <span className="homepage-cta-text">
+                Already have an account? <a href="/login">Sign in</a>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
