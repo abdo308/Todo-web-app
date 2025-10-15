@@ -319,3 +319,82 @@ body::before {
     }
   }
 }
+
+/* Password Input Container - Override form-group when used together */
+.login-form .form-group .password-input-container {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.password-input-container input {
+  width: 100% !important;
+  padding: 1.1rem 3rem 0.5rem 1rem !important;
+  font-size: 1rem;
+  border: 1.5px solid #bfc9d9;
+  border-radius: 8px;
+  background: #f9f6f2;
+  color: #000;
+  outline: none;
+  transition: border 0.2s;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.password-input-container input:focus {
+  border-color: #e07a5f;
+  color: #000 !important;
+  background: #f9f6f2;
+}
+
+.password-input-container label {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  background: transparent;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 4px;
+  z-index: 2;
+}
+
+.password-input-container input:focus + label,
+.password-input-container input:not(:placeholder-shown) + label {
+  top: -0.7rem;
+  left: 18px;
+  transform: translateY(0);
+  font-size: 0.85rem;
+  color: #e07a5f;
+  background: #f9f6f2;
+  padding: 0 4px;
+  z-index: 3;
+}
+
+/* Password Toggle Button */
+.password-toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #666;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.password-toggle-btn:hover {
+  color: #333;
+}

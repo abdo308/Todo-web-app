@@ -13,6 +13,8 @@ function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -53,6 +55,16 @@ function SignupPage() {
     setPassword("");
     setConfirmPassword("");
     setAgree(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -119,26 +131,44 @@ function SignupPage() {
               <label htmlFor="email">Enter Email</label>
             </div>
             <div className="form-group">
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder=" "
-              />
-              <label htmlFor="password">Enter Password</label>
+              <div className="password-input-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder=" "
+                />
+                <label htmlFor="password">Enter Password</label>
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
             <div className="form-group">
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                placeholder=" "
-              />
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <div className="password-input-container">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder=" "
+                />
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={toggleConfirmPasswordVisibility}
+                >
+                  {showConfirmPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
             <div className="terms-row">
               <input
