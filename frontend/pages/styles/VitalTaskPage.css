@@ -1,0 +1,531 @@
+/* VitalTaskPage.css */
+
+@import url("./palette.css");
+
+.vitaltask-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f7f7fa;
+  font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
+}
+
+/* Sidebar Styles */
+.vitaltask-sidebar {
+  width: 280px;
+  background: #1a1a1a;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1.5rem;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-header {
+  margin-bottom: 2rem;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.user-email {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  color: #ccc;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.nav-item.active {
+  background: var(--palette-accent-red, #e07a5f);
+  color: #fff;
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  background: transparent;
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Main Content */
+.vitaltask-main {
+  margin-left: 280px;
+  flex: 1;
+  padding: 2rem;
+  width: calc(100% - 280px);
+}
+
+/* Header */
+.vitaltask-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.vitaltask-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000;
+}
+
+.title-highlight {
+  color: var(--palette-accent-red, #e07a5f);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: 300px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--palette-accent-red, #e07a5f);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: var(--palette-button-hover, #b8563b);
+}
+
+.calendar-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  gap: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.date-text {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-align: left;
+}
+
+/* Content Grid */
+.vitaltask-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Vital Tasks List Section */
+.vital-list-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.vital-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.vital-task-card {
+  background: #f9f9fb;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #eee;
+  transition: all 0.2s;
+}
+
+.vital-task-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.vital-task-main {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.vital-task-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 0.25rem;
+  accent-color: var(--palette-accent-red, #e07a5f);
+  cursor: pointer;
+}
+
+.vital-task-content {
+  flex: 1;
+}
+
+.vital-task-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.vital-task-description {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.vital-task-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.vital-task-priority {
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.priority-extreme {
+  background: #ffe0e0;
+  color: #d32f2f;
+}
+
+.priority-moderate {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.priority-normal {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.vital-task-status {
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.status-not-started {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.status-in-progress {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-completed {
+  background: #e0f7e0;
+  color: #2e7d32;
+}
+
+.vital-task-date {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.vital-task-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Task Details Section */
+.vital-detail-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.vital-detail-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.vital-detail-header {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.detail-header-image {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 1rem;
+}
+
+.detail-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detail-header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.detail-header-meta {
+  display: flex;
+  gap: 1rem;
+}
+
+.detail-priority,
+.detail-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+}
+
+.vital-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.detail-short-desc {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.detail-long-desc {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.detail-activities {
+  margin-top: 0.5rem;
+}
+
+.activities-list {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activity-item {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-btn {
+  background: var(--palette-accent-red, #e07a5f);
+  color: #fff;
+}
+
+.edit-btn:hover {
+  background: var(--palette-button-hover, #b8563b);
+  transform: scale(1.05);
+}
+
+.delete-btn {
+  background: var(--palette-accent-red, #e07a5f);
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background: var(--palette-button-hover, #b8563b);
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .vitaltask-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vital-detail-section {
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .vitaltask-sidebar {
+    width: 70px;
+    padding: 1rem 0.5rem;
+  }
+
+  .user-profile {
+    flex-direction: column;
+    padding: 0.5rem;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .nav-text {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 0.9rem;
+  }
+
+  .vitaltask-main {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+    padding: 1rem;
+  }
+
+  .search-box {
+    width: 200px;
+  }
+
+  .vitaltask-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

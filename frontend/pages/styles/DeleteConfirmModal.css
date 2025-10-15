@@ -1,0 +1,129 @@
+/* Delete Confirmation Modal Styles */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.delete-modal-overlay.closing {
+  opacity: 0;
+}
+
+.delete-modal-content {
+  background: white;
+  border-radius: 20px;
+  width: 400px;
+  max-width: 90vw;
+  padding: 0;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transform: scale(1) translateY(0);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.delete-modal-content.closing {
+  transform: scale(0.95) translateY(20px);
+  opacity: 0;
+}
+
+.delete-modal-header {
+  padding: 30px 30px 10px 30px;
+  text-align: center;
+}
+
+.delete-modal-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0;
+}
+
+.delete-modal-body {
+  padding: 20px 30px;
+  text-align: center;
+}
+
+.delete-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+.delete-message {
+  font-size: 16px;
+  color: #374151;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+.delete-warning {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-style: italic;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 15px;
+  padding: 20px 30px 30px 30px;
+  justify-content: center;
+}
+
+.cancel-btn,
+.confirm-delete-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.cancel-btn:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-2px);
+}
+
+.confirm-delete-btn {
+  background-color: #dc2626;
+  color: white;
+}
+
+.confirm-delete-btn:hover {
+  background-color: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 38, 38, 0.3);
+}
+
+/* Animation keyframes */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.delete-modal-content {
+  animation: modalEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
