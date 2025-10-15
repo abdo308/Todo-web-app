@@ -249,8 +249,18 @@ function MyTaskPage() {
                 </div>
 
                 <div className="detail-actions">
-                  <button className="action-btn edit-btn" onClick={handleEditTask}>✏️</button>
-                  <button className="action-btn delete-btn" onClick={handleDeleteTask}>🗑️</button>
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={handleEditTask}
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={handleDeleteTask}
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             </div>
