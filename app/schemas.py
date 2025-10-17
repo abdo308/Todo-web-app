@@ -12,6 +12,8 @@ class PriorityEnum(str, Enum):
 class UserBase(BaseModel):
     email: EmailStr
     username: str
+    firstname: str
+    lastname: str
 
 class UserCreate(UserBase):
     password: str
@@ -31,8 +33,8 @@ class UserResponse(UserBase):
     is_active: bool
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    # class Config:
+    #     from_attributes = True
 
 # Todo Schemas
 class TodoBase(BaseModel):
@@ -70,6 +72,12 @@ class TodoList(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    
+class TokenWithUser(BaseModel, UserBase):
+    access_token: str
+    token_type: str
+
+    
 
 class TokenData(BaseModel):
     username: Optional[str] = None

@@ -1,25 +1,63 @@
 import React, { useState } from "react";
 import "../styles/LoginPageFigma.css";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import loginIllustration from "../assets/undraw_sign-in_uva0 (1).svg";
 
 function LoginPage() {
-  const [email, setEmail] = useState("");
+
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(false);
+    
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
+    
     e.preventDefault();
-    // Simulate login failure for demonstration
-    if (email !== "admin@example.com" || password !== "password123") {
-      setError("Invalid email or password. Please try again.");
-    } else {
-      setError("");
-      alert(`Email: ${email}\nPassword: ${password}`);
+    setSuccess("");
+    if (
+      !username ||
+      !password 
+    ) {
+      setError("All fields are required.");
+      return;
     }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+   
+    }
+        setError("");
+        
+    const body = new URLSearchParams({
+    username,
+    password
+  });
+    axios.post("http://localhost:8000/login", body, 
+      { headers: { "Content-Type": "application/x-www-form-urlencoded"},})
+      .then((response) => {
+          const data = response.data
+          const token = data.access_token;
+          // Store in sessionStorage
+          console.log(response);
+          sessionStorage.setItem("token", token);
+          sessionStorage.setItem("username", username);
+          setUsername("");
+          setPassword("");
+          setShowPassword(false);
+          navigate("/dashboard");
+  }
+    )
+      .catch((error) => {
+        console.error("Error:", error)
+        setError(error)
+      });
   };
-
+  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -38,15 +76,15 @@ function LoginPage() {
             )}
             <div className="form-group">
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="username"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="username"
                 placeholder=" "
               />
-              <label htmlFor="email">Email or Username</label>
+              <label htmlFor="username">Username</label>
             </div>
             <div className="form-group">
               <div className="password-input-container">

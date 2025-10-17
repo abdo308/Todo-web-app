@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "../styles/LoginPage.css";
 import "../styles/SignupPage.css";
 import signupIllustration from "../assets/undraw_sign-up_z2ku (1).svg";
@@ -15,6 +17,8 @@ function SignupPage() {
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -47,16 +51,28 @@ function SignupPage() {
       return;
     }
     setError("");
-    setSuccess("Account created! You can now log in.");
-    setFirstName("");
-    setLastName("");
-    setUsername("");
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setAgree(false);
-    setShowPassword(false);
-    setShowConfirmPassword(false);
+    
+    axios.post("http://localhost:8000/register",{
+            firstName, lastName, email, username, password
+      })
+      .then((response) => {
+          setSuccess("Account created! You can now log in.");
+          setFirstName("");
+          setLastName("");
+          setUsername("");
+          setEmail("");
+          setPassword("");
+          setConfirmPassword("");
+          setAgree(false);
+          setShowPassword(false);
+          setShowConfirmPassword(false);
+          navigate("/login");
+  }
+    )
+      .catch((error) => {
+        console.error("Error:", error)
+        setError(error)
+      });
   };
 
   const togglePasswordVisibility = () => {

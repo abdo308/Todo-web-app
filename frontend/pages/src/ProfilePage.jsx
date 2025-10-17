@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/ProfilePage.css";
+import axios from "axios";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 function ProfilePage() {
@@ -7,6 +8,7 @@ function ProfilePage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
 
   const handleLogout = () => {
     // Clear any stored authentication data
@@ -17,22 +19,40 @@ function ProfilePage() {
   };
 
   const [profileData, setProfileData] = useState({
-    username: "amanuel",
-    firstName: "amanuel",
+    username: "",
+    firstName: "",
     lastName: "",
-    email: "amanuel@gmail.com",
+    email: "",
     contactNumber: "",
     position: "",
   });
 
   // Mock user data
   const user = {
-    name: "amanuel",
-    email: "amanuel@gmail.com",
     avatar:
       "https://ui-avatars.com/api/?name=Amanuel&background=e07a5f&color=fff&size=128",
   };
 
+  useEffect(()=> {
+      const token = sessionStorage.getItem("token");
+      axios.get("http://localhost:8000/me", 
+      { headers: {Authorization: `Bearer ${token}`},})
+      .then((response) => {
+          const data = response.data
+          // Store in sessionStorage
+          setProfileData(
+                 {
+                    username: data.username,
+                    firstName: data.firstname,
+                    lastName: data.lastname,
+                    email: data.email,
+                    contactNumber: "",
+                    position: "",
+                 }
+          )
+      
+  })
+  }, [])
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({
@@ -90,8 +110,8 @@ function ProfilePage() {
           <div className="user-profile">
             <img src={user.avatar} alt={user.name} className="user-avatar" />
             <div className="user-info">
-              <h3 className="user-name">{user.name}</h3>
-              <p className="user-email">{user.email}</p>
+              <h3 className="user-name">{profileData.firstName} {profileData.lastName}</h3>
+              <p className="user-email">{profileData.email}</p>
             </div>
           </div>
         </div>
@@ -157,8 +177,8 @@ function ProfilePage() {
                 </div>
               </div>
               <div className="profile-basic-info">
-                <h3 className="profile-name">{user.name}</h3>
-                <p className="profile-email">{user.email}</p>
+                <h3 className="profile-name">{profileData.firstName} {profileData.lastName}</h3>
+                <p className="profile-email">{profileData.email}</p>
               </div>
             </div>
 

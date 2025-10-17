@@ -24,7 +24,6 @@ function App() {
         <Route path="/mytask" element={<MyTaskPage />} />
         <Route path="/vitaltask" element={<VitalTaskPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

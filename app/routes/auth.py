@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.database import get_db
 from app.models import User
-from app.schemas import UserCreate, UserResponse, Token, MessageResponse
+from app.schemas import TokenWithUser, UserCreate, UserResponse, Token, MessageResponse
 from app.auth import (
     get_password_hash, 
     authenticate_user, 
@@ -38,6 +38,8 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         email=user.email,
         username=user.username,
+        firstname=user.firstname,
+        lastname=user.lastname,
         hashed_password=hashed_password
     )
     
@@ -47,7 +49,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     
     return db_user
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=TokenWithUser)
 async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """Login user and return access token"""
     user = authenticate_user(db, form_data.username, form_data.password)
@@ -62,8 +64,7 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessi
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", 'username': user.username, 'firstname': user.firstname, 'lastname': user.lastname, 'email': user.email}
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
