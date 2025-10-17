@@ -10,6 +10,7 @@ function DashboardPage() {
   const [editingTask, setEditingTask] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+
   const handleLogout = () => {
     // Clear any stored authentication data
     localStorage.removeItem("authToken");

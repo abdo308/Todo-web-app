@@ -82,3 +82,14 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+def _ensure_unique(db: Session, *, email: Optional[str], username: Optional[str], exclude_user_id: int):
+    if email:
+        exists = db.query(User).filter(User.email == email, User.id != exclude_user_id).first()
+        if exists:
+            raise HTTPException(status_code=400, detail="Email already in use.")
+    if username:
+        exists = db.query(User).filter(User.username == username, User.id != exclude_user_id).first()
+        if exists:
+            raise HTTPException(status_code=400, detail="Username already in use.")

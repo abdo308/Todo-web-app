@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, validator
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
+import re
 
 class PriorityEnum(str, Enum):
     low = "low"
@@ -14,6 +15,8 @@ class UserBase(BaseModel):
     username: str
     firstname: str
     lastname: str
+    contact: str
+
 
 class UserCreate(UserBase):
     password: str
@@ -32,6 +35,7 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     created_at: datetime
+    contact:   str
     
     # class Config:
     #     from_attributes = True
@@ -73,7 +77,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     
-class TokenWithUser(BaseModel, UserBase):
+class TokenWithUser(UserResponse):
     access_token: str
     token_type: str
 
@@ -85,3 +89,21 @@ class TokenData(BaseModel):
 # Response Schemas
 class MessageResponse(BaseModel):
     message: str
+    
+class UserUpdate(BaseModel):
+    email: EmailStr
+    firstname: str
+    lastname: str
+    contact: str 
+    
+    @validator('contact')
+    def validate_contact(cls, v):
+        RE_11_DIGITS = re.compile(r'^\d{11}$')
+        if len(v) < 11 or RE_11_DIGITS.fullmatch(v) is None :
+            raise ValueError('Enter valid contact')
+        return v
+
+class ChangePasswordPayload(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_new_password: str 

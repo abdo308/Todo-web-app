@@ -6,10 +6,11 @@ import "../styles/SignupPage.css";
 import signupIllustration from "../assets/undraw_sign-up_z2ku (1).svg";
 
 function SignupPage() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(false);
@@ -24,10 +25,11 @@ function SignupPage() {
     e.preventDefault();
     setSuccess("");
     if (
-      !firstName ||
-      !lastName ||
+      !firstname ||
+      !lastname ||
       !username ||
       !email ||
+      !contact ||
       !password ||
       !confirmPassword
     ) {
@@ -36,6 +38,10 @@ function SignupPage() {
     }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       setError("Please enter a valid email address.");
+      return;
+    }
+     if (!/^\d{11}$/.test(contact)) {
+      setError("Please enter a valid contact.");
       return;
     }
     if (password.length < 6) {
@@ -53,14 +59,15 @@ function SignupPage() {
     setError("");
     
     axios.post("http://localhost:8000/register",{
-            firstName, lastName, email, username, password
+            firstname, lastname, email, username, password, contact
       })
       .then((response) => {
           setSuccess("Account created! You can now log in.");
-          setFirstName("");
-          setLastName("");
+          setFirstname("");
+          setLastname("");
           setUsername("");
           setEmail("");
+          setContact("");
           setPassword("");
           setConfirmPassword("");
           setAgree(false);
@@ -105,24 +112,24 @@ function SignupPage() {
             <div className="form-group">
               <input
                 type="text"
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                id="firstname"
+                value={firstname}
+                onChange={(e) => setFirstname(e.target.value)}
                 required
                 placeholder=" "
               />
-              <label htmlFor="firstName">Enter First Name</label>
+              <label htmlFor="firstname">Enter First Name</label>
             </div>
             <div className="form-group">
               <input
                 type="text"
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                id="lastname"
+                value={lastname}
+                onChange={(e) => setLastname(e.target.value)}
                 required
                 placeholder=" "
               />
-              <label htmlFor="lastName">Enter Last Name</label>
+              <label htmlFor="lastname">Enter Last Name</label>
             </div>
             <div className="form-group">
               <input
@@ -145,6 +152,17 @@ function SignupPage() {
                 placeholder=" "
               />
               <label htmlFor="email">Enter Email</label>
+            </div>
+            <div className="form-group">
+              <input
+                type="contact"
+                id="contact"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                required
+                placeholder=" "
+              />
+              <label htmlFor="email">Enter Contact</label>
             </div>
             <div className="form-group">
               <div className="password-input-container">

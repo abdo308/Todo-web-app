@@ -8,7 +8,8 @@ function ProfilePage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-
+  const token = sessionStorage.getItem("token");
+  
 
   const handleLogout = () => {
     // Clear any stored authentication data
@@ -19,11 +20,12 @@ function ProfilePage() {
   };
 
   const [profileData, setProfileData] = useState({
+    id:"",
     username: "",
-    firstName: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
-    contactNumber: "",
+    contact: "",
     position: "",
   });
 
@@ -34,7 +36,6 @@ function ProfilePage() {
   };
 
   useEffect(()=> {
-      const token = sessionStorage.getItem("token");
       axios.get("http://localhost:8000/me", 
       { headers: {Authorization: `Bearer ${token}`},})
       .then((response) => {
@@ -42,17 +43,19 @@ function ProfilePage() {
           // Store in sessionStorage
           setProfileData(
                  {
+                    id: data.id,
                     username: data.username,
-                    firstName: data.firstname,
-                    lastName: data.lastname,
+                    firstname: data.firstname,
+                    lastname: data.lastname,
                     email: data.email,
-                    contactNumber: "",
-                    position: "",
+                    contact: data.contact
+
                  }
           )
       
   })
   }, [])
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({
@@ -64,13 +67,25 @@ function ProfilePage() {
   const handleUpdateInfo = () => {
     console.log("Updated profile data:", profileData);
     // Here you would typically send the data to your backend
+        axios.patch(`http://localhost:8000/update/${profileData.id}`,{
+            firstname: profileData.firstname, lastname: profileData.lastname, email: profileData.email, contact: profileData.contact
+      }, { headers: {Authorization: `Bearer ${token}`},})
+      .then((response) => {
+          
+         setProfileData(response.data)
+        setSuccessMessage("Profile updated successfully!");
+        setShowSuccessMessage(true);
+           // Show success message
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000); // Hide after 3 seconds
+  }
+    )
+      .catch((error) => {
+        console.error("Error:", error)
+        setError(error)
+      });
 
-    // Show success message
-    setSuccessMessage("Profile updated successfully!");
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000); // Hide after 3 seconds
   };
 
   const handleChangePassword = () => {
@@ -78,16 +93,24 @@ function ProfilePage() {
   };
 
   const handleChangePasswordSubmit = (passwordData) => {
-    console.log("Password change submitted:", passwordData);
-    // Here you would typically send the data to your backend
-
-    // Show success message
+     axios.post("http://localhost:8000/change-password",{
+            confirm_new_password: passwordData.confirmPassword , new_password: passwordData.newPassword , current_password: passwordData.currentPassword
+      }, { headers: {Authorization: `Bearer ${token}`},})
+      .then((response) => {
+      // Show success message
     setSuccessMessage("Password changed successfully!");
     setShowSuccessMessage(true);
     setTimeout(() => {
       setShowSuccessMessage(false);
     }, 3000); // Hide after 3 seconds
-  };
+  }
+    )
+      .catch((error) => {
+        console.error("Error:", error)
+        setError(error)
+      });
+  
+    }
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -177,7 +200,7 @@ function ProfilePage() {
                 </div>
               </div>
               <div className="profile-basic-info">
-                <h3 className="profile-name">{profileData.firstName} {profileData.lastName}</h3>
+                <h3 className="profile-name">{profileData.firstname} {profileData.lastname}</h3>
                 <p className="profile-email">{profileData.email}</p>
               </div>
             </div>
@@ -191,6 +214,7 @@ function ProfilePage() {
                   value={profileData.username}
                   onChange={handleInputChange}
                   className="form-input"
+                  disabled ={true}
                 />
               </div>
 
@@ -198,8 +222,8 @@ function ProfilePage() {
               <div className="form-group">
                 <input
                   type="text"
-                  name="firstName"
-                  value={profileData.firstName}
+                  name="firstname"
+                  value={profileData.firstname}
                   onChange={handleInputChange}
                   className="form-input"
                 />
@@ -209,8 +233,8 @@ function ProfilePage() {
               <div className="form-group">
                 <input
                   type="text"
-                  name="lastName"
-                  value={profileData.lastName}
+                  name="lastname"
+                  value={profileData.lastname}
                   onChange={handleInputChange}
                   className="form-input"
                 />
@@ -231,24 +255,12 @@ function ProfilePage() {
               <div className="form-group">
                 <input
                   type="tel"
-                  name="contactNumber"
-                  value={profileData.contactNumber}
+                  name="contact"
+                  value={profileData.contact}
                   onChange={handleInputChange}
                   className="form-input"
                 />
               </div>
-
-              <label className="field-title">Position</label>
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="position"
-                  value={profileData.position}
-                  onChange={handleInputChange}
-                  className="form-input"
-                />
-              </div>
-
               <div className="form-actions">
                 <button
                   type="button"
@@ -285,6 +297,7 @@ function ProfilePage() {
         isOpen={showChangePasswordModal}
         onClose={() => setShowChangePasswordModal(false)}
         onSubmit={handleChangePasswordSubmit}
+
       />
     </div>
   );
