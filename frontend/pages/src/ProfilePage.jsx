@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/ProfilePage.css";
 import axios from "axios";
 import ChangePasswordModal from "./ChangePasswordModal";
@@ -6,21 +7,24 @@ import ChangePasswordModal from "./ChangePasswordModal";
 function ProfilePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
+  const navigate = useNavigate();
   const token = sessionStorage.getItem("token");
-  
 
   const handleLogout = () => {
-    // Clear any stored authentication data
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+    // Clear stored session auth
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("username");
     // Redirect to login page
     window.location.href = "/login";
   };
 
   const [profileData, setProfileData] = useState({
-    id:"",
+    id: "",
     username: "",
     firstname: "",
     lastname: "",
@@ -29,63 +33,203 @@ function ProfilePage() {
     position: "",
   });
 
-  // Mock user data
+  const [editedProfileData, setEditedProfileData] = useState({
+    id: "",
+    username: "",
+    firstname: "",
+    lastname: "",
+    email: "",
+    contact: "",
+    position: "",
+  });
+
+  // Mock user data (avatar only)
   const user = {
     avatar:
       "https://ui-avatars.com/api/?name=Amanuel&background=e07a5f&color=fff&size=128",
   };
 
-  useEffect(()=> {
-      axios.get("http://localhost:8000/me", 
-      { headers: {Authorization: `Bearer ${token}`},})
+  // Helper to show success toast
+  const showSuccess = (msg) => {
+    setSuccessMessage(msg);
+    setShowSuccessMessage(true);
+    setTimeout(() => setShowSuccessMessage(false), 3000);
+  };
+
+  // Helper to show error toast
+  const showError = (msg) => {
+    setErrorMessage(msg || "Something went wrong. Please try again.");
+    setShowErrorMessage(true);
+    setTimeout(() => setShowErrorMessage(false), 3000);
+  };
+
+  useEffect(() => {
+    if (!token) {
+      showError("Your session has expired. Please log in again.");
+      navigate("/login");
+      return;
+    }
+
+    axios
+      .get("http://localhost:8000/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
-          const data = response.data
-          // Store in sessionStorage
-          setProfileData(
-                 {
-                    id: data.id,
-                    username: data.username,
-                    firstname: data.firstname,
-                    lastname: data.lastname,
-                    email: data.email,
-                    contact: data.contact
+        const data = response.data;
+        const normalized = {
+          id: data.id ?? "",
+          username: data.username ?? "",
+          firstname: data.firstname ?? "",
+          lastname: data.lastname ?? "",
+          email: data.email ?? "",
+          contact: data.contact ?? "",
+          position: data.position ?? "",
+        };
+        setProfileData(normalized);
+        setEditedProfileData(normalized);
+      })
+      .catch((error) => {
+        console.error("Profile fetch error:", error);
+        if (error.response) {
+          const { status, data } = error.response;
 
-                 }
-          )
-      
-  })
-  }, [])
+          // FastAPI validation array
+          if (Array.isArray(data?.detail)) {
+            const messages = data.detail
+              .map((err) => {
+                const field = err.loc?.[1] || "field";
+                return `${field}: ${err.msg}`;
+              })
+              .join(" | ");
+            showError(messages);
+            return;
+          }
 
+          if (status === 401) {
+            showError("Your session has expired. Please log in again.");
+            navigate("/login");
+            return;
+          }
+
+          if (typeof data?.detail === "string") {
+            showError(data.detail);
+            return;
+          }
+
+          showError("Failed to load profile. Please try again.");
+        } else if (error.request) {
+          showError("No response from server. Check your connection and try again.");
+        } else {
+          showError("An unexpected error occurred. Please try again.");
+        }
+      });
+  }, [token, navigate]);
+
+  // IMPORTANT: make inputs edit the editable copy
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({
+    setEditedProfileData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleUpdateInfo = () => {
-    console.log("Updated profile data:", profileData);
-    // Here you would typically send the data to your backend
-        axios.patch(`http://localhost:8000/update/${profileData.id}`,{
-            firstname: profileData.firstname, lastname: profileData.lastname, email: profileData.email, contact: profileData.contact
-      }, { headers: {Authorization: `Bearer ${token}`},})
-      .then((response) => {
-          
-         setProfileData(response.data)
-        setSuccessMessage("Profile updated successfully!");
-        setShowSuccessMessage(true);
-           // Show success message
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-        }, 3000); // Hide after 3 seconds
-  }
-    )
-      .catch((error) => {
-        console.error("Error:", error)
-        setError(error)
-      });
+  const handleUpdateInfo = async () => {
+    // Client-side validation
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRe = /^\d{11}$/; // Egypt 11 digits
+    const localErrors = [];
 
+    const payload = {
+      firstname: String(editedProfileData.firstname || "").trim(),
+      lastname: String(editedProfileData.lastname || "").trim(),
+      email: String(editedProfileData.email || "").trim(),
+      contact: String(editedProfileData.contact || "").trim(),
+    };
+
+    if (!payload.firstname) localErrors.push("firstname: cannot be empty");
+    if (!payload.lastname) localErrors.push("lastname: cannot be empty");
+    if (!emailRe.test(payload.email)) localErrors.push("email: invalid email format");
+    if (payload.contact && !phoneRe.test(payload.contact))
+      localErrors.push("contact: must be 11 digits");
+
+    if (localErrors.length) {
+      showError(localErrors.join(" | "));
+      return;
+    }
+
+    if (!token) {
+      showError("You’re not logged in. Please sign in again.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const { data } = await axios.patch(
+        `http://localhost:8000/update/${profileData.id}`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const normalized = {
+        id: data.id ?? "",
+        username: data.username ?? "",
+        firstname: data.firstname ?? "",
+        lastname: data.lastname ?? "",
+        email: data.email ?? "",
+        contact: data.contact ?? "",
+        position: data.position ?? "",
+      };
+
+      // Sync both states so UI and form reflect saved values
+      setProfileData(normalized);
+      setEditedProfileData(normalized);
+      showSuccess("Profile updated successfully!");
+    } catch (error) {
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (Array.isArray(data?.detail)) {
+          const msg = data.detail
+            .map((e) => {
+              const field = e?.loc?.[1] ?? "field";
+              return `${field}: ${e?.msg}`;
+            })
+            .join(" | ");
+          showError(msg);
+          return;
+        }
+
+        if (status === 401) {
+          showError("Your session has expired. Please log in again.");
+          navigate("/login");
+          return;
+        }
+        if (status === 403) {
+          showError("You don’t have permission to update this profile.");
+          return;
+        }
+        if (status === 409) {
+          showError(
+            typeof data?.detail === "string"
+              ? data.detail
+              : "Conflict: the provided data is already in use."
+          );
+          return;
+        }
+
+        if (typeof data?.detail === "string") {
+          showError(data.detail);
+          return;
+        }
+
+        showError("Update failed. Please review your inputs and try again.");
+      } else if (error.request) {
+        showError("No response from server. Check your connection and try again.");
+      } else {
+        showError("An unexpected error occurred. Please try again.");
+      }
+    }
   };
 
   const handleChangePassword = () => {
@@ -93,35 +237,61 @@ function ProfilePage() {
   };
 
   const handleChangePasswordSubmit = (passwordData) => {
-     axios.post("http://localhost:8000/change-password",{
-            confirm_new_password: passwordData.confirmPassword , new_password: passwordData.newPassword , current_password: passwordData.currentPassword
-      }, { headers: {Authorization: `Bearer ${token}`},})
-      .then((response) => {
-      // Show success message
-    setSuccessMessage("Password changed successfully!");
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000); // Hide after 3 seconds
-  }
-    )
+    axios
+      .post(
+        "http://localhost:8000/change-password",
+        {
+          confirm_new_password: passwordData.confirmPassword,
+          new_password: passwordData.newPassword,
+          current_password: passwordData.currentPassword,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      .then(() => {
+        showSuccess("Password changed successfully!");
+      })
       .catch((error) => {
-        console.error("Error:", error)
-        setError(error)
+        console.error("Change password error:", error);
+        if (error.response) {
+          const { status, data } = error.response;
+
+          if (Array.isArray(data?.detail)) {
+            const msg = data.detail
+              .map((e) => {
+                const field = e?.loc?.[1] ?? "field";
+                return `${field}: ${e?.msg}`;
+              })
+              .join(" | ");
+            showError(msg);
+            return;
+          }
+
+          if (status === 401) {
+            showError("Your session has expired. Please log in again.");
+            navigate("/login");
+            return;
+          }
+
+          if (typeof data?.detail === "string") {
+            showError(data.detail);
+            return;
+          }
+
+          showError("Failed to change password. Please try again.");
+        } else if (error.request) {
+          showError("No response from server. Check your connection and try again.");
+        } else {
+          showError("An unexpected error occurred. Please try again.");
+        }
       });
-  
-    }
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        // Here you would typically upload to your backend
-        console.log("New profile picture selected:", file);
-        // For now, just log the file
-      };
-      reader.readAsDataURL(file);
+      // Here you would typically upload to your backend
+      console.log("New profile picture selected:", file);
+      // For now, just log the file
     }
   };
 
@@ -131,9 +301,11 @@ function ProfilePage() {
       <aside className="profile-sidebar">
         <div className="sidebar-header">
           <div className="user-profile">
-            <img src={user.avatar} alt={user.name} className="user-avatar" />
+            <img src={user.avatar} alt="User" className="user-avatar" />
             <div className="user-info">
-              <h3 className="user-name">{profileData.firstName} {profileData.lastName}</h3>
+              <h3 className="user-name">
+                {profileData.firstname} {profileData.lastname}
+              </h3>
               <p className="user-email">{profileData.email}</p>
             </div>
           </div>
@@ -177,7 +349,7 @@ function ProfilePage() {
               <div className="profile-avatar-container">
                 <img
                   src={user.avatar}
-                  alt={user.name}
+                  alt="User"
                   className="profile-avatar-large"
                 />
                 <div className="avatar-upload-overlay">
@@ -200,7 +372,9 @@ function ProfilePage() {
                 </div>
               </div>
               <div className="profile-basic-info">
-                <h3 className="profile-name">{profileData.firstname} {profileData.lastname}</h3>
+                <h3 className="profile-name">
+                  {profileData.firstname} {profileData.lastname}
+                </h3>
                 <p className="profile-email">{profileData.email}</p>
               </div>
             </div>
@@ -211,10 +385,10 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="username"
-                  value={profileData.username}
+                  value={editedProfileData.username || ""}
                   onChange={handleInputChange}
                   className="form-input"
-                  disabled ={true}
+                  disabled={true}
                 />
               </div>
 
@@ -223,7 +397,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="firstname"
-                  value={profileData.firstname}
+                  value={editedProfileData.firstname || ""}
                   onChange={handleInputChange}
                   className="form-input"
                 />
@@ -234,7 +408,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="lastname"
-                  value={profileData.lastname}
+                  value={editedProfileData.lastname || ""}
                   onChange={handleInputChange}
                   className="form-input"
                 />
@@ -245,7 +419,7 @@ function ProfilePage() {
                 <input
                   type="email"
                   name="email"
-                  value={profileData.email}
+                  value={editedProfileData.email || ""}
                   onChange={handleInputChange}
                   className="form-input"
                 />
@@ -256,11 +430,12 @@ function ProfilePage() {
                 <input
                   type="tel"
                   name="contact"
-                  value={profileData.contact}
+                  value={editedProfileData.contact || ""}
                   onChange={handleInputChange}
                   className="form-input"
                 />
               </div>
+
               <div className="form-actions">
                 <button
                   type="button"
@@ -292,12 +467,21 @@ function ProfilePage() {
         </div>
       )}
 
+      {/* Error Message */}
+      {showErrorMessage && (
+        <div className="error-message">
+          <div className="error-content">
+            <div className="error-icon">X</div>
+            <span>{errorMessage}</span>
+          </div>
+        </div>
+      )}
+
       {/* Change Password Modal */}
       <ChangePasswordModal
         isOpen={showChangePasswordModal}
         onClose={() => setShowChangePasswordModal(false)}
         onSubmit={handleChangePasswordSubmit}
-
       />
     </div>
   );

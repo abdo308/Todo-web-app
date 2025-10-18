@@ -59,7 +59,7 @@ function SignupPage() {
     setError("");
     
     axios.post("http://localhost:8000/register",{
-            firstname, lastname, email, username, password, contact
+            firstname, lastname, email, username, password, contact:""
       })
       .then((response) => {
           setSuccess("Account created! You can now log in.");
@@ -77,9 +77,27 @@ function SignupPage() {
   }
     )
       .catch((error) => {
-        console.error("Error:", error)
-        setError(error)
-      });
+      console.error("Error:", error);
+      if (error.response) {
+          const data = error.response.data;
+          if (Array.isArray(data.detail)) {
+            // Collect multiple validation errors
+            const messages = data.detail.map((err) => {
+              const field = err.loc?.[1] || "field";
+              return `${field}: ${err.msg}`;
+            });
+            setError(messages.join(" | "));
+          } else if (typeof data.detail === "string") {
+            // Single string error message
+            setError(data.detail);
+          } else {
+            setError("Registration failed. Please check your inputs.");
+          }
+        } else if (error.request) {
+          setError("No response from server. Please try again later.");
+        } else {
+          setError("An unexpected error occurred.");
+        }})
   };
 
   const togglePasswordVisibility = () => {

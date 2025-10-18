@@ -37,25 +37,51 @@ function LoginPage() {
     username,
     password
   });
-    axios.post("http://localhost:8000/login", body, 
-      { headers: { "Content-Type": "application/x-www-form-urlencoded"},})
-      .then((response) => {
-          const data = response.data
-          const token = data.access_token;
-          // Store in sessionStorage
-          console.log(response);
-          sessionStorage.setItem("token", token);
-          sessionStorage.setItem("username", username);
-          setUsername("");
-          setPassword("");
-          setShowPassword(false);
-          navigate("/dashboard");
-  }
-    )
-      .catch((error) => {
-        console.error("Error:", error)
-        setError(error)
+axios.post("http://localhost:8000/login", body, {
+  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+})
+.then((response) => {
+  const data = response.data;
+  const token = data.access_token;
+
+  // Save token and username
+  sessionStorage.setItem("token", token);
+  sessionStorage.setItem("username", username);
+
+  // Reset form state
+  setUsername("");
+  setPassword("");
+  setShowPassword(false);
+
+  navigate("/dashboard");
+})
+.catch((error) => {
+  console.error("Login error:", error);
+
+  if (error.response) {
+    const data = error.response.data;
+
+    // FastAPI typical response
+    if (Array.isArray(data.detail)) {
+      const messages = data.detail.map((err) => {
+        const field = err.loc?.[1] || "field";
+        return `${field}: ${err.msg}`;
       });
+      setError(messages.join(" | "));
+    } 
+    else if (typeof data.detail === "string") {
+      setError(data.detail); // e.g., "Incorrect username or password"
+    } 
+    else {
+      setError("Login failed. Please check your credentials.");
+    }
+
+  } else if (error.request) {
+    setError("No response from server. Please try again later.");
+  } else {
+    setError("An unexpected error occurred. Please try again.");
+  }
+});
   };
   
   const togglePasswordVisibility = () => {
