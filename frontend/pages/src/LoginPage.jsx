@@ -9,14 +9,32 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate login failure for demonstration
-    if (email !== "admin@example.com" || password !== "password123") {
-      setError("Invalid email or password. Please try again.");
-    } else {
-      setError("");
-      alert(`Email: ${email}\nPassword: ${password}`);
+    setError("");
+    try {
+      const response = await fetch("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.access_token) {
+          localStorage.setItem("access_token", data.access_token);
+        }
+        window.location.href = "/dashboard";
+      } else {
+        const data = await response.json();
+        setError(data.detail || "Invalid email or password. Please try again.");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
     }
   };
 
@@ -46,7 +64,7 @@ function LoginPage() {
                 autoComplete="username"
                 placeholder=" "
               />
-              <label htmlFor="email">Email or Username</label>
+              <label htmlFor="email">Email</label>
             </div>
             <div className="form-group">
               <div className="password-input-container">

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # FastAPI Application
   api:
@@ -17,8 +15,6 @@ services:
       - redis
     networks:
       - todo-network
-
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     environment:
@@ -40,6 +36,16 @@ services:
       - redis_data:/data
     networks:
       - todo-network
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - todo-network
+    depends_on:
+      - api
 
 volumes:
   postgres_data:

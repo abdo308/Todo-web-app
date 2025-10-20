@@ -51,3 +51,4 @@ test.db
 test_*.db
 node_modules/
 *.txt
+uploads/

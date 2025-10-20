@@ -19,10 +19,21 @@ function EditTaskModal({
   // Update form when initialTaskData changes
   useEffect(() => {
     if (initialTaskData) {
+      // Convert ISO date to YYYY-MM-DD for input
+      let dateValue = "";
+      if (initialTaskData.date) {
+        const d = new Date(initialTaskData.date);
+        dateValue = d.toISOString().slice(0, 10);
+      }
+      // Convert backend priority to modal value
+      let priorityValue = "Low";
+      if (initialTaskData.priority === "medium") priorityValue = "Moderate";
+      else if (initialTaskData.priority === "high") priorityValue = "Extreme";
+      else if (initialTaskData.priority === "low") priorityValue = "Low";
       setTaskData({
         title: initialTaskData.title || "",
-        date: initialTaskData.date || "",
-        priority: initialTaskData.priority || "Low",
+        date: dateValue,
+        priority: priorityValue,
         description: initialTaskData.description || "",
         image: initialTaskData.image || null,
       });
@@ -89,7 +100,6 @@ function EditTaskModal({
               value={taskData.title}
               onChange={handleChange}
               className="form-input title-input"
-              required
             />
           </div>
 
@@ -102,7 +112,6 @@ function EditTaskModal({
               value={taskData.date}
               onChange={handleChange}
               className="form-input date-input"
-              required
             />
           </div>
 
@@ -157,7 +166,6 @@ function EditTaskModal({
                   className="form-textarea"
                   placeholder="Start typing"
                   rows="6"
-                  required
                 ></textarea>
               </div>
 
