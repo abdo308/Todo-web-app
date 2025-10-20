@@ -5,7 +5,7 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
   const [taskData, setTaskData] = useState({
     title: "",
     date: "",
-    priority: "Low",
+    priority: "low",
     description: "",
     image: null,
   });
@@ -39,16 +39,43 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(taskData);
-    // Reset form
-    setTaskData({
-      title: "",
-      date: "",
-      priority: "Low",
-      description: "",
-      image: null,
-    });
-    handleClose();
+    // Build multipart/form-data
+    const formData = new FormData();
+    formData.append("title", taskData.title);
+    if (taskData.date) formData.append("date", taskData.date);
+    formData.append("priority", taskData.priority);
+    formData.append("description", taskData.description || "");
+    if (taskData.image) {
+      formData.append("image", taskData.image);
+    }
+
+    const token = localStorage.getItem("access_token");
+
+    fetch("/todos", {
+      method: "POST",
+      body: formData,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create todo");
+        return res.json();
+      })
+      .then((json) => {
+        if (onSubmit) onSubmit(json);
+        // Reset form
+        setTaskData({
+          title: "",
+          date: "",
+          priority: "low",
+          description: "",
+          image: null,
+        });
+        handleClose();
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   };
 
   if (!isOpen) return null;
@@ -101,30 +128,30 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
             <div className="priority-boxes">
               <div
                 className={`priority-box ${
-                  taskData.priority === "Extreme" ? "selected" : ""
+                  taskData.priority === "high" ? "selected" : ""
                 } priority-extreme`}
                 onClick={() =>
-                  setTaskData((prev) => ({ ...prev, priority: "Extreme" }))
+                  setTaskData((prev) => ({ ...prev, priority: "high" }))
                 }
               >
-                Extreme
+                High
               </div>
               <div
                 className={`priority-box ${
-                  taskData.priority === "Moderate" ? "selected" : ""
+                  taskData.priority === "medium" ? "selected" : ""
                 } priority-moderate`}
                 onClick={() =>
-                  setTaskData((prev) => ({ ...prev, priority: "Moderate" }))
+                  setTaskData((prev) => ({ ...prev, priority: "medium" }))
                 }
               >
-                Moderate
+                Medium
               </div>
               <div
                 className={`priority-box ${
-                  taskData.priority === "Low" ? "selected" : ""
+                  taskData.priority === "low" ? "selected" : ""
                 } priority-low`}
                 onClick={() =>
-                  setTaskData((prev) => ({ ...prev, priority: "Low" }))
+                  setTaskData((prev) => ({ ...prev, priority: "low" }))
                 }
               >
                 Low

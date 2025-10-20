@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../styles/DashboardPage.css";
 import AddTaskModal from "./AddTaskModal";
 import EditTaskModal from "./EditTaskModal";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 
 function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -9,6 +10,9 @@ function DashboardPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingTask, setDeletingTask] = useState(null);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
 
   const handleLogout = () => {
     // Clear any stored authentication data
@@ -18,26 +22,107 @@ function DashboardPage() {
     window.location.href = "/login";
   };
 
-  const handleAddTask = (taskData) => {
-    console.log("New task added:", taskData);
-    // Here you would typically add the task to your state or send it to a backend
+  // Ref to trigger todos reload
+  const fetchTodos = React.useCallback(() => {
+    const token = localStorage.getItem("access_token");
+    fetch("/todos", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch todos");
+        return res.json();
+      })
+      .then((data) => {
+        setTasks(data.todos || data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
+  const handleAddTask = (taskData) => {
     // Show success message
     setShowSuccessMessage(true);
     setTimeout(() => {
       setShowSuccessMessage(false);
     }, 3000); // Hide after 3 seconds
+    // Refresh todos
+    fetchTodos();
   };
 
-  const handleEditTask = (taskData) => {
-    console.log("Task updated:", taskData);
-    // Here you would typically update the task in your state or send it to a backend
+  const handleEditTask = async (taskData) => {
+    const token = localStorage.getItem("access_token");
+    const priorityMap = {
+      Low: "low",
+      Moderate: "medium",
+      Extreme: "high",
+    };
+    const formData = new FormData();
+    if (taskData.title && taskData.title.trim() !== "")
+      formData.append("title", taskData.title);
+    if (taskData.description && taskData.description.trim() !== "")
+      formData.append("description", taskData.description);
+    if (
+      taskData.priority &&
+      ["Low", "Moderate", "Extreme"].includes(taskData.priority)
+    ) {
+      // Map frontend priority to backend values
+      let backendPriority = "medium";
+      if (taskData.priority === "Low") backendPriority = "low";
+      else if (taskData.priority === "Moderate") backendPriority = "medium";
+      else if (taskData.priority === "Extreme") backendPriority = "high";
+      formData.append("priority", backendPriority);
+    }
+    if (taskData.date && !isNaN(new Date(taskData.date).getTime()))
+      formData.append("date", new Date(taskData.date).toISOString());
+    if (taskData.image && typeof taskData.image !== "string") {
+      // Only send image if a new photo is selected
+      formData.append("image", taskData.image);
+    }
+    fetch(`/todos/${editingTask?.id || initialTaskData?.id}`, {
+      method: "PUT",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update task");
+        return res.json();
+      })
+      .then(() => {
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
+        fetchTodos();
+        setIsEditModalOpen(false);
+      })
+      .catch((err) => {
+        setIsEditModalOpen(false);
+      });
+  };
 
-    // Show success message
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000); // Hide after 3 seconds
+  const handleDeleteTask = async () => {
+    if (!deletingTask) return;
+    const token = localStorage.getItem("access_token");
+    fetch(`/todos/${deletingTask.id}`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete task");
+        return res.json();
+      })
+      .then(() => {
+        setIsDeleteModalOpen(false);
+        setDeletingTask(null);
+        fetchTodos();
+        setShowDeleteSuccess(true);
+        setTimeout(() => setShowDeleteSuccess(false), 3000);
+      })
+      .catch((err) => {
+        setIsDeleteModalOpen(false);
+        setDeletingTask(null);
+      });
   };
 
   const openEditModal = (task) => {
@@ -53,39 +138,11 @@ function DashboardPage() {
       "https://ui-avatars.com/api/?name=Amanuel&background=e07a5f&color=fff&size=128",
   };
 
-  // Mock tasks data
-  const tasks = [
-    {
-      id: 1,
-      title: "Attend Nischa's Birthday Party",
-      description:
-        "Buy gifts on the way and pick up cake from the bakery. [6 PM] Westfield Doncaster...",
-      priority: "Normal",
-      status: "In Progress",
-      image:
-        "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop",
-    },
-    {
-      id: 2,
-      title: "Landing Page Design for TravelGays",
-      description:
-        "Get the work done by EOD and discuss with client before sending [6 PM] Meeting Room]",
-      priority: "Normal",
-      status: "In Progress",
-      image:
-        "https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?w=400&h=300&fit=crop",
-    },
-    {
-      id: 3,
-      title: "Presentation on Final Product",
-      description:
-        "Make sure everything is functioning and all the neccessities are covered [2 PM] and get the...",
-      priority: "Normal",
-      status: "In Progress",
-      image:
-        "https://images.unsplash.com/photo-1556761175-4b46a572b786?w=400&h=300&fit=crop",
-    },
-  ];
+  // Fetch tasks from backend
+  const [tasks, setTasks] = useState([]);
+  React.useEffect(() => {
+    fetchTodos();
+  }, [fetchTodos]);
 
   // Mock completed task
   const completedTask = {
@@ -215,37 +272,72 @@ function DashboardPage() {
             </div>
 
             <div className="task-list">
-              {tasks.map((task) => (
-                <div key={task.id} className="task-card">
-                  <div className="task-content">
-                    <input type="checkbox" className="task-checkbox" />
-                    <div className="task-details">
-                      <h4 className="task-title">{task.title}</h4>
-                      <p className="task-description">{task.description}</p>
-                      <div className="task-meta">
-                        <span className="task-priority">
-                          Priority: {task.priority}
-                        </span>
-                        <span className="task-status status-progress">
-                          Status: {task.status}
-                        </span>
+              {tasks.map((task) => {
+                // Fix image URL: if image is just a filename, prepend /uploads/
+                let imageUrl = task.image;
+                if (imageUrl && !/^https?:\/\//.test(imageUrl)) {
+                  imageUrl = `http://localhost:8000/uploads/${imageUrl}`;
+                }
+                return (
+                  <div key={task.id} className="task-card">
+                    <div className="task-content">
+                      <input type="checkbox" className="task-checkbox" />
+                      <div className="task-details">
+                        <h4 className="task-title">{task.title}</h4>
+                        <p className="task-description">{task.description}</p>
+                        <div className="task-meta">
+                          <span className="task-priority">
+                            Priority: {task.priority}
+                          </span>
+                          <span className="task-status status-progress">
+                            Status: {task.status}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Edit/Delete buttons wrapper - horizontal alignment */}
+                      <div className="task-action-btns">
+                        <button
+                          className="edit-task-btn"
+                          onClick={() => openEditModal(task)}
+                          title="Edit Task"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="edit-task-btn"
+                          style={{ background: "#ffeaea" }}
+                          title="Delete Task"
+                          onClick={() => {
+                            setDeletingTask(task);
+                            setIsDeleteModalOpen(true);
+                          }}
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </div>
-                    <button
-                      className="edit-task-btn"
-                      onClick={() => openEditModal(task)}
-                      title="Edit Task"
-                    >
-                      ✏️
-                    </button>
+                    {/* Thumbnail image on right */}
+                    {imageUrl && (
+                      <img
+                        src={imageUrl}
+                        alt={task.title}
+                        className="task-image"
+                        style={{
+                          width: "80px",
+                          height: "80px",
+                          borderRadius: "8px",
+                          objectFit: "cover",
+                          marginLeft: "1rem",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    )}
                   </div>
-                  <img
-                    src={task.image}
-                    alt={task.title}
-                    className="task-image"
-                  />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
@@ -370,12 +462,33 @@ function DashboardPage() {
         taskData={editingTask}
       />
 
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingTask(null);
+        }}
+        onConfirm={handleDeleteTask}
+        taskTitle={deletingTask?.title || ""}
+      />
+
       {/* Success Message */}
       {showSuccessMessage && (
         <div className="success-message">
           <div className="success-content">
             <div className="success-icon">✓</div>
-            <span>Task added successfully!</span>
+            <span>Task edited successfully!</span>
+          </div>
+        </div>
+      )}
+
+      {/* Slide-in delete success message */}
+      {showDeleteSuccess && (
+        <div className="slide-success-message">
+          <div className="slide-success-content">
+            <span className="slide-success-icon">🗑️</span>
+            <span>Task deleted successfully!</span>
           </div>
         </div>
       )}

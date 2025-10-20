@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
 from app.models import Base
@@ -15,6 +16,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Serve static files from /uploads
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Add CORS middleware
 app.add_middleware(

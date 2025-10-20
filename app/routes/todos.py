@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import Optional, List
+import os
+import uuid
+from datetime import datetime
+from shutil import copyfileobj
 from app.database import get_db
 from app.models import User, Todo
-from app.schemas import TodoCreate, TodoUpdate, TodoResponse, TodoList, MessageResponse
+from app.schemas import TodoCreate, TodoUpdate, TodoResponse, TodoList, MessageResponse, PriorityEnum
 from app.auth import get_current_active_user
 from app.cache import cache_result, invalidate_cache_pattern, rate_limit
 import math
@@ -14,17 +18,50 @@ router = APIRouter(prefix="/todos", tags=["Todos"])
 @router.post("", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
 @rate_limit(max_requests=50, window=3600)  # 50 creates per hour
 async def create_todo(
-    todo: TodoCreate, 
+    title: str = Form(...),
+    description: Optional[str] = Form(None),
+    priority: PriorityEnum = Form(PriorityEnum.medium.value),
+    date: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new todo"""
+    """Create a new todo (accepts multipart/form-data with optional image)"""
+
+    # Parse date if provided (expecting ISO date or YYYY-MM-DD)
+    parsed_date = None
+    if date:
+        try:
+            parsed_date = datetime.fromisoformat(date)
+        except Exception:
+            try:
+                parsed_date = datetime.strptime(date, "%Y-%m-%d")
+            except Exception:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format. Use YYYY-MM-DD or ISO format.")
+
+    image_filename = None
+    if image:
+        uploads_dir = os.path.join(os.getcwd(), "uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+        # generate unique filename keeping original extension
+        _, ext = os.path.splitext(image.filename or "")
+        image_filename = f"{uuid.uuid4().hex}{ext}"
+        dest_path = os.path.join(uploads_dir, image_filename)
+        try:
+            with open(dest_path, "wb") as f:
+                copyfileobj(image.file, f)
+        finally:
+            image.file.close()
+
     db_todo = Todo(
-        title=todo.title,
-        description=todo.description,
+        title=title,
+        description=description,
+        priority=priority if isinstance(priority, str) else priority.value,
+        date=parsed_date,
+        image=image_filename,
         owner_id=current_user.id
     )
-    
+
     db.add(db_todo)
     db.commit()
     db.refresh(db_todo)
@@ -105,29 +142,55 @@ async def get_todo(
 @router.put("/{todo_id}", response_model=TodoResponse)
 async def update_todo(
     todo_id: int,
-    todo_update: TodoUpdate,
+    title: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    priority: Optional[str] = Form(None),
+    date: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Update a specific todo"""
+    """Update a specific todo, including optional image upload"""
     todo = db.query(Todo).filter(
         and_(Todo.id == todo_id, Todo.owner_id == current_user.id)
     ).first()
-    
     if not todo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Todo not found"
         )
-    
-    # Update only provided fields
-    update_data = todo_update.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(todo, field, value)
-    
+    # Handle image upload if provided
+    if image:
+        uploads_dir = os.path.join(os.getcwd(), "uploads")
+        os.makedirs(uploads_dir, exist_ok=True)
+        _, ext = os.path.splitext(image.filename or "")
+        image_filename = f"{uuid.uuid4().hex}{ext}"
+        dest_path = os.path.join(uploads_dir, image_filename)
+        try:
+            with open(dest_path, "wb") as f:
+                copyfileobj(image.file, f)
+        finally:
+            image.file.close()
+        todo.image = image_filename
+    # Only update fields that are present in the request
+    if title is not None and title != "":
+        todo.title = title
+    if description is not None and description != "":
+        todo.description = description
+    if priority is not None and priority != "":
+        if priority not in ["low", "medium", "high"]:
+            raise HTTPException(status_code=400, detail="Invalid priority value")
+        todo.priority = priority
+    if date is not None and date != "":
+        try:
+            todo.date = datetime.fromisoformat(date)
+        except Exception:
+            try:
+                todo.date = datetime.strptime(date, "%Y-%m-%d")
+            except Exception:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format. Use YYYY-MM-DD or ISO format.")
     db.commit()
     db.refresh(todo)
-    
     return todo
 
 @router.delete("/{todo_id}", response_model=MessageResponse)

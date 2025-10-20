@@ -12,6 +12,10 @@ class PriorityEnum(str, Enum):
 class UserBase(BaseModel):
     email: EmailStr
     username: str
+    firstname: str = ""
+    lastname: str = ""
+    contact: str = ""
+    position: str = ""
 
 class UserCreate(UserBase):
     password: str
@@ -39,6 +43,11 @@ class TodoBase(BaseModel):
     title: str
     description: Optional[str] = None
     priority: PriorityEnum = PriorityEnum.medium
+    # Optional scheduled datetime for the task
+    date: Optional[datetime] = None
+
+    # Image filename or URL stored on the server
+    image: Optional[str] = None
 
 class TodoCreate(TodoBase):
     pass
@@ -48,6 +57,8 @@ class TodoUpdate(BaseModel):
     description: Optional[str] = None
     completed: Optional[bool] = None
     priority: Optional[PriorityEnum] = None
+    date: Optional[datetime] = None
+    image: Optional[str] = None
 
 class TodoResponse(TodoBase):
     id: int
