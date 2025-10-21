@@ -6,6 +6,7 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
     title: "",
     date: "",
     priority: "low",
+    status: "pending",
     description: "",
     image: null,
   });
@@ -44,6 +45,7 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
     formData.append("title", taskData.title);
     if (taskData.date) formData.append("date", taskData.date);
     formData.append("priority", taskData.priority);
+    formData.append("status", taskData.status);
     formData.append("description", taskData.description || "");
     if (taskData.image) {
       formData.append("image", taskData.image);
@@ -157,6 +159,19 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
                 Low
               </div>
             </div>
+          </div>
+          <label className="status-label">Status</label>
+          <div className="form-group">
+            <select
+              name="status"
+              value={taskData.status}
+              onChange={handleChange}
+              className="form-input status-input"
+            >
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
 
           <div className="form-row">

@@ -29,6 +29,7 @@ class Todo(Base):
     date = Column(DateTime(timezone=True), nullable=True)
     completed = Column(Boolean, default=False)
     priority = Column(String, default="medium")  # low, medium, high
+    status = Column(String, default="in_progress")  # pending, in_progress, completed
     # Store the uploaded image filename (if any)
     image = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -45,7 +45,7 @@ class TodoBase(BaseModel):
     priority: PriorityEnum = PriorityEnum.medium
     # Optional scheduled datetime for the task
     date: Optional[datetime] = None
-
+    status: Optional[str] = "pending"
     # Image filename or URL stored on the server
     image: Optional[str] = None
 
@@ -58,11 +58,13 @@ class TodoUpdate(BaseModel):
     completed: Optional[bool] = None
     priority: Optional[PriorityEnum] = None
     date: Optional[datetime] = None
+    status: Optional[str] = None
     image: Optional[str] = None
 
 class TodoResponse(TodoBase):
     id: int
     completed: bool
+    status: str
     created_at: datetime
     updated_at: Optional[datetime] = None
     owner_id: int

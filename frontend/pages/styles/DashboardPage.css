@@ -15,6 +15,14 @@
   font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
 }
 
+/* Ensure the dashboard background fills the entire viewport so the
+   page-level dark gradient (body) does not show through on wide screens */
+.dashboard-container {
+  width: 100vw;
+  position: relative;
+  overflow-x: hidden;
+}
+
 /* Sidebar Styles */
 .dashboard-sidebar {
   width: 280px;
@@ -121,8 +129,10 @@
 .dashboard-main {
   margin-left: 280px;
   flex: 1;
-  padding: 2rem;
-  width: calc(100% - 280px);
+  /* reduce padding to move main content slightly closer to the sidebar while keeping breathing room */
+  padding: 1.25rem;
+  /* Use viewport width so the main content always fills to the right edge */
+  width: calc(100vw - 280px);
 }
 
 /* Header */
@@ -228,14 +238,16 @@
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  gap: 2rem;
+  /* slightly tighter gap to match screenshot spacing */
+  gap: 1.5rem;
 }
 
 /* To-Do Section */
 .todo-section {
   background: #fff;
   border-radius: 16px;
-  padding: 1.5rem;
+  /* keep a bit less inner padding so the list lines up with the status panel */
+  padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -287,6 +299,14 @@
 
 .task-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* animate removal from To-Do list */
+.task-card.removing {
+  opacity: 0;
+  transform: translateX(30px) scale(0.98);
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
 }
 
 .task-content {
@@ -502,9 +522,33 @@
 .completed-task-card {
   background: #fff0ee;
   border: 1px solid var(--palette-accent-red, #e07a5f);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
+  /* a slightly larger radius to match the card shapes in the screenshot */
+  border-radius: 12px;
+  /* a touch tighter padding to keep the card compact */
+  padding: 0.9rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  /* keep a minimum height so empty-state cards don't collapse */
+  min-height: 68px;
+}
+
+/* animate entrance into Completed panel */
+.completed-task-card.recent-complete {
+  animation: enterFromLeft 380ms ease-out both;
+}
+
+@keyframes enterFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-18px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 .completed-badge {
@@ -512,6 +556,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 0.25rem;
+  display: block;
 }
 
 .completed-time {
@@ -570,10 +615,39 @@
 }
 
 .task-thumb {
+  /* slightly smaller thumb and more rounded to match screenshot */
   width: 60px;
   height: 60px;
-  border-radius: 8px;
+  border-radius: 10px;
   object-fit: cover;
+  margin-left: 0.6rem;
+}
+
+/* Completed header */
+.completed-header {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.completed-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.completed-delete-btn {
+  background: transparent;
+  border: none;
+  color: #b33a3a;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.completed-delete-btn:hover {
+  background: rgba(224, 122, 95, 0.06);
 }
 
 /* Responsive */
