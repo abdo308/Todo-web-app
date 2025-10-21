@@ -22,6 +22,7 @@ async def create_todo(
     description: Optional[str] = Form(None),
     priority: PriorityEnum = Form(PriorityEnum.medium.value),
     date: Optional[str] = Form(None),
+    status: Optional[str] = Form("pending"),
     image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -58,6 +59,7 @@ async def create_todo(
         description=description,
         priority=priority if isinstance(priority, str) else priority.value,
         date=parsed_date,
+        status=status,
         image=image_filename,
         owner_id=current_user.id
     )
@@ -146,6 +148,7 @@ async def update_todo(
     description: Optional[str] = Form(None),
     priority: Optional[str] = Form(None),
     date: Optional[str] = Form(None),
+    status: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -189,6 +192,8 @@ async def update_todo(
                 todo.date = datetime.strptime(date, "%Y-%m-%d")
             except Exception:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format. Use YYYY-MM-DD or ISO format.")
+    if status is not None and status != "":
+        todo.status = status
     db.commit()
     db.refresh(todo)
     return todo

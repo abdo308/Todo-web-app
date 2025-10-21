@@ -11,6 +11,7 @@ function EditTaskModal({
     title: "",
     date: "",
     priority: "Low",
+    status: "pending",
     description: "",
     image: null,
   });
@@ -34,6 +35,7 @@ function EditTaskModal({
         title: initialTaskData.title || "",
         date: dateValue,
         priority: priorityValue,
+        status: initialTaskData.status || "pending",
         description: initialTaskData.description || "",
         image: initialTaskData.image || null,
       });
@@ -149,6 +151,19 @@ function EditTaskModal({
                 Low
               </div>
             </div>
+          </div>
+          <label className="status-label">Status</label>
+          <div className="form-group">
+            <select
+              name="status"
+              value={taskData.status}
+              onChange={handleChange}
+              className="form-input status-input"
+            >
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
 
           <div className="form-row">

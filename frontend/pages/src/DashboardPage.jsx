@@ -13,6 +13,8 @@ function DashboardPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingTask, setDeletingTask] = useState(null);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [movingTaskId, setMovingTaskId] = useState(null);
+  const [recentlyCompletedId, setRecentlyCompletedId] = useState(null);
 
   const handleLogout = () => {
     // Clear any stored authentication data
@@ -66,12 +68,14 @@ function DashboardPage() {
       taskData.priority &&
       ["Low", "Moderate", "Extreme"].includes(taskData.priority)
     ) {
-      // Map frontend priority to backend values
       let backendPriority = "medium";
       if (taskData.priority === "Low") backendPriority = "low";
       else if (taskData.priority === "Moderate") backendPriority = "medium";
       else if (taskData.priority === "Extreme") backendPriority = "high";
       formData.append("priority", backendPriority);
+    }
+    if (taskData.status && taskData.status.trim() !== "") {
+      formData.append("status", taskData.status);
     }
     if (taskData.date && !isNaN(new Date(taskData.date).getTime()))
       formData.append("date", new Date(taskData.date).toISOString());
@@ -125,6 +129,53 @@ function DashboardPage() {
       });
   };
 
+  // Toggle a task to completed (animate out from todo, animate into completed)
+  const handleToggleComplete = (task) => {
+    if (!task) return;
+    // if already completed, do nothing for now
+    if (task.status && task.status.toString().toLowerCase() === "completed")
+      return;
+
+    // Mark as 'moving' to play a removal animation in the To-Do list
+    setMovingTaskId(task.id);
+
+    // After a short animation delay, send the update to backend and update local state
+    setTimeout(() => {
+      const token = localStorage.getItem("access_token");
+      const formData = new FormData();
+      formData.append("status", "completed");
+
+      fetch(`/todos/${task.id}`, {
+        method: "PUT",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to update task status");
+          return res.json();
+        })
+        .then(() => {
+          // Optimistically update local tasks: set this task to completed
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === task.id ? { ...t, status: "completed" } : t
+            )
+          );
+
+          // Mark as recently completed to play entrance animation in Completed panel
+          setRecentlyCompletedId(task.id);
+          // clear the recent flag after animation
+          setTimeout(() => setRecentlyCompletedId(null), 700);
+        })
+        .catch((err) => {
+          console.error(err);
+        })
+        .finally(() => {
+          setMovingTaskId(null);
+        });
+    }, 180);
+  };
+
   const openEditModal = (task) => {
     setEditingTask(task);
     setIsEditModalOpen(true);
@@ -144,35 +195,15 @@ function DashboardPage() {
     fetchTodos();
   }, [fetchTodos]);
 
-  // Mock completed task
-  const completedTask = {
-    title: "Completed Task",
-    description: "This is a sample completed task",
-    status: "Completed",
-    completedTime: "3 sec ago",
-  };
+  // completed tasks will be derived from fetched `tasks`
+  const completedTasks = tasks.filter(
+    (t) => t.status && t.status.toString().toLowerCase() === "completed"
+  );
 
-  // Mock current task
-  const currentTask = {
-    title: "Walk the dog",
-    description:
-      "Take the dog to the park and bring treats. [2 PM] Riverside Park]",
-    status: "Completed",
-    completedTime: "1 day ago",
-    image:
-      "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop",
-  };
-
-  // Mock upcoming task
-  const upcomingTask = {
-    title: "Conduct meeting",
-    description:
-      "Meet with client and explain Figma prototype and its features [3 PM]",
-    status: "Completed",
-    completedTime: "2 days ago",
-    image:
-      "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?w=400&h=300&fit=crop",
-  };
+  // tasks that should appear in the To-Do list (exclude completed)
+  const todoTasks = tasks.filter(
+    (t) => !(t.status && t.status.toString().toLowerCase() === "completed")
+  );
 
   // Task statistics
   const stats = {
@@ -272,16 +303,26 @@ function DashboardPage() {
             </div>
 
             <div className="task-list">
-              {tasks.map((task) => {
+              {todoTasks.map((task) => {
                 // Fix image URL: if image is just a filename, prepend /uploads/
                 let imageUrl = task.image;
                 if (imageUrl && !/^https?:\/\//.test(imageUrl)) {
                   imageUrl = `http://localhost:8000/uploads/${imageUrl}`;
                 }
                 return (
-                  <div key={task.id} className="task-card">
+                  <div
+                    key={task.id}
+                    className={`task-card ${
+                      movingTaskId === task.id ? "removing" : ""
+                    }`}
+                  >
                     <div className="task-content">
-                      <input type="checkbox" className="task-checkbox" />
+                      <input
+                        type="checkbox"
+                        className="task-checkbox"
+                        onChange={() => handleToggleComplete(task)}
+                        disabled={movingTaskId === task.id}
+                      />
                       <div className="task-details">
                         <h4 className="task-title">{task.title}</h4>
                         <p className="task-description">{task.description}</p>
@@ -383,66 +424,62 @@ function DashboardPage() {
               </div>
             </div>
 
-            {/* Completed Task */}
-            <div className="completed-task-card">
-              <div className="completed-badge">✓ {completedTask.title}</div>
-              <p className="completed-time">{completedTask.completedTime}</p>
+            <div className="completed-header">
+              <h4 className="completed-title">Completed Tasks</h4>
             </div>
-
-            {/* Current & Upcoming Tasks */}
-            <div className="upcoming-tasks">
-              <div className="upcoming-task-item">
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  className="task-checkbox"
-                />
-                <div className="task-info">
-                  <h4 className="task-name">{currentTask.title}</h4>
-                  <p className="task-desc">{currentTask.description}</p>
-                  <div className="task-footer">
-                    <span className="task-status-badge">
-                      {currentTask.status}
-                    </span>
-                    <span className="task-time">
-                      {currentTask.completedTime}
-                    </span>
-                  </div>
-                </div>
-                <img
-                  src={currentTask.image}
-                  alt={currentTask.title}
-                  className="task-thumb"
-                />
+            {completedTasks.length === 0 ? (
+              <div className="completed-task-card">
+                <div className="completed-badge">✓ Completed Task</div>
+                <p className="completed-time">No completed tasks yet.</p>
               </div>
+            ) : (
+              completedTasks.map((ct) => {
+                const img =
+                  ct.image && /^https?:/.test(ct.image)
+                    ? ct.image
+                    : ct.image
+                    ? `http://localhost:8000/uploads/${ct.image}`
+                    : null;
+                return (
+                  <div
+                    key={ct.id}
+                    className={`completed-task-card ${
+                      recentlyCompletedId === ct.id ? "recent-complete" : ""
+                    }`}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        flex: 1,
+                      }}
+                    >
+                      <div className="completed-badge">✓ {ct.title}</div>
+                      <p className="completed-time">
+                        {ct.date ? new Date(ct.date).toLocaleDateString() : ""}
+                      </p>
+                    </div>
 
-              <div className="upcoming-task-item">
-                <input
-                  type="checkbox"
-                  checked
-                  readOnly
-                  className="task-checkbox"
-                />
-                <div className="task-info">
-                  <h4 className="task-name">{upcomingTask.title}</h4>
-                  <p className="task-desc">{upcomingTask.description}</p>
-                  <div className="task-footer">
-                    <span className="task-status-badge">
-                      {upcomingTask.status}
-                    </span>
-                    <span className="task-time">
-                      {upcomingTask.completedTime}
-                    </span>
+                    {/* delete button for completed tasks */}
+                    <button
+                      className="completed-delete-btn"
+                      title="Delete completed task"
+                      onClick={() => {
+                        setDeletingTask(ct);
+                        setIsDeleteModalOpen(true);
+                      }}
+                    >
+                      🗑️
+                    </button>
+
+                    {img && (
+                      <img src={img} alt={ct.title} className="task-thumb" />
+                    )}
                   </div>
-                </div>
-                <img
-                  src={upcomingTask.image}
-                  alt={upcomingTask.title}
-                  className="task-thumb"
-                />
-              </div>
-            </div>
+                );
+              })
+            )}
           </section>
         </div>
       </main>
