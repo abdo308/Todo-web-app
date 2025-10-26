@@ -5,14 +5,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      # Override host-provided DATABASE_URL when running in Docker so the
+      # API connects to the postgres container on the compose network.
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - SECRET_KEY=${SECRET_KEY}
       - ALGORITHM=${ALGORITHM}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
     depends_on:
       - postgres
-      - redis
     networks:
       - todo-network
   postgres:
@@ -24,24 +24,27 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - todo-network
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
+    # Nginx reverse proxy — serves the frontend and proxies API routes to the api service
+  nginx:
+    image: nginx:alpine
     ports:
-      - "6379:6379"
+      - "3000:80"
     volumes:
-      - redis_data:/data
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - api
     networks:
       - todo-network
   frontend:
     build:
       context: ./frontend
-      dockerfile: dockerfile
-    ports:
-      - "3000:3000"
+      dockerfile: Dockerfile
+      # frontend continues to run its static server on 3000 inside the network,
+      # but we do NOT publish it to the host anymore — nginx will expose port 3000
     networks:
       - todo-network
     depends_on:
@@ -49,7 +52,6 @@ services:
 
 volumes:
   postgres_data:
-  redis_data:
 
 networks:
   todo-network:

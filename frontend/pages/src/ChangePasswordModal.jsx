@@ -86,12 +86,27 @@ function ChangePasswordModal({ isOpen, onClose, onSubmit }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      onSubmit(passwordData);
-      handleClose();
+    if (!validateForm()) return;
+
+    try {
+      // onSubmit should return an object { success: boolean, message?: string }
+      const result = await onSubmit(passwordData);
+      if (result && result.success) {
+        handleClose();
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          form: result?.message || "Failed to change password",
+        }));
+      }
+    } catch (err) {
+      setErrors((prev) => ({
+        ...prev,
+        form: err?.message || "Failed to change password",
+      }));
     }
   };
 
@@ -114,6 +129,9 @@ function ChangePasswordModal({ isOpen, onClose, onSubmit }) {
         </div>
 
         <form className="password-modal-form" onSubmit={handleSubmit}>
+          {errors.form && (
+            <div className="password-form-error">{errors.form}</div>
+          )}
           <label className="password-field-title">Current Password</label>
           <div className="password-form-group">
             <div className="password-input-container">

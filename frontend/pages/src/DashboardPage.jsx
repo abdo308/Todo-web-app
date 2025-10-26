@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/DashboardPage.css";
 import AddTaskModal from "./AddTaskModal";
 import EditTaskModal from "./EditTaskModal";
@@ -13,6 +13,7 @@ function DashboardPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingTask, setDeletingTask] = useState(null);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
   const [movingTaskId, setMovingTaskId] = useState(null);
   const [recentlyCompletedId, setRecentlyCompletedId] = useState(null);
 
@@ -116,7 +117,10 @@ function DashboardPage() {
         if (!res.ok) throw new Error("Failed to delete task");
         return res.json();
       })
-      .then(() => {
+      .then((data) => {
+        // Allow backend-provided message to be shown in the dashboard toast
+        const msg = (data && data.message) || "Task deleted successfully!";
+        setDeleteMessage(msg);
         setIsDeleteModalOpen(false);
         setDeletingTask(null);
         fetchTodos();
@@ -128,6 +132,44 @@ function DashboardPage() {
         setDeletingTask(null);
       });
   };
+
+  // Listen for cross-page todo:deleted events so Dashboard shows the same message
+  useEffect(() => {
+    const onTodoDeleted = (e) => {
+      try {
+        const msg =
+          (e && e.detail && e.detail.message) || "Task deleted successfully!";
+        setDeleteMessage(msg);
+        setShowDeleteSuccess(true);
+        setTimeout(() => setShowDeleteSuccess(false), 3000);
+      } catch (err) {
+        // ignore
+      }
+    };
+    window.addEventListener("todo:deleted", onTodoDeleted);
+    // Also listen for cross-tab deletes via localStorage
+    const onStorage = (ev) => {
+      try {
+        if (ev.key === "todo:deleted" && ev.newValue) {
+          const payload = JSON.parse(ev.newValue);
+          const msg =
+            payload && payload.message
+              ? payload.message
+              : "Task deleted successfully!";
+          setDeleteMessage(msg);
+          setShowDeleteSuccess(true);
+          setTimeout(() => setShowDeleteSuccess(false), 3000);
+        }
+      } catch (err) {
+        // ignore parse errors
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("todo:deleted", onTodoDeleted);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // Toggle a task to completed (animate out from todo, animate into completed)
   const handleToggleComplete = (task) => {
@@ -181,13 +223,41 @@ function DashboardPage() {
     setIsEditModalOpen(true);
   };
 
-  // Mock user data
-  const user = {
-    name: "amanuel",
-    email: "amanuel@gmail.com",
+  // User state (loaded from backend /auth/me)
+  const [user, setUser] = React.useState({
+    name: "",
+    email: "",
     avatar:
-      "https://ui-avatars.com/api/?name=Amanuel&background=e07a5f&color=fff&size=128",
-  };
+      "https://ui-avatars.com/api/?name=User&background=e07a5f&color=fff&size=128",
+  });
+
+  // Load current user info (same approach as ProfilePage)
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch("/auth/me", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return; // ignore if not authenticated
+        const json = await res.json();
+        const displayName =
+          json.firstname || json.username || json.email || "User";
+        setUser({
+          name: displayName,
+          email: json.email || "",
+          avatar:
+            json.avatar ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              displayName
+            )}&background=e07a5f&color=fff&size=128`,
+        });
+      } catch (err) {
+        // ignore
+      }
+    };
+    loadUser();
+  }, []);
 
   // Fetch tasks from backend
   const [tasks, setTasks] = useState([]);
@@ -331,7 +401,7 @@ function DashboardPage() {
                             Priority: {task.priority}
                           </span>
                           <span className="task-status status-progress">
-                            Status: {task.status}
+                            Status: {task.status || "pending"}
                           </span>
                         </div>
                       </div>
@@ -525,7 +595,9 @@ function DashboardPage() {
         <div className="slide-success-message">
           <div className="slide-success-content">
             <span className="slide-success-icon">🗑️</span>
-            <span>Task deleted successfully!</span>
+            <span className="slide-success-text">
+              {deleteMessage || "Task deleted successfully!"}
+            </span>
           </div>
         </div>
       )}

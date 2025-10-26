@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.database import get_db
 from app.models import User
-from app.schemas import UserCreate, UserResponse, Token, MessageResponse
+from app.schemas import UserCreate, UserResponse, Token, MessageResponse, UserUpdate, ChangePasswordRequest
 from app.auth import (
     get_password_hash, 
     authenticate_user, 
@@ -12,7 +12,8 @@ from app.auth import (
     get_user_by_username,
     get_user_by_email,
     get_current_active_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    verify_password,
 )
 
 router = APIRouter(prefix="/auth",tags=["Authentication"])
@@ -71,3 +72,56 @@ async def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Sessi
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     """Get current user information"""
     return current_user
+
+
+@router.put("/me", response_model=UserResponse)
+async def put_current_user(
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Update (PUT) current user's allowed fields"""
+    data = user_update.dict(exclude_unset=True)
+    if not data:
+        return current_user
+
+    # Check uniqueness for email/username
+    if "email" in data and data.get("email"):
+        existing = get_user_by_email(db, data.get("email"))
+        if existing and existing.id != current_user.id:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+    if "username" in data and data.get("username"):
+        existing = get_user_by_username(db, data.get("username"))
+        if existing and existing.id != current_user.id:
+            raise HTTPException(status_code=400, detail="Username already registered")
+
+    for key, value in data.items():
+        setattr(current_user, key, value)
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.post("/change-password", response_model=MessageResponse)
+async def change_password(
+    payload: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Change current user's password after validating current password"""
+    # verify current password
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    # validate new password length
+    if not payload.new_password or len(payload.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    # update password
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    db.add(current_user)
+    db.commit()
+    return {"message": "Password changed successfully"}
