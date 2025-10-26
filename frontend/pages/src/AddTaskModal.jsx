@@ -65,11 +65,12 @@ function AddTaskModal({ isOpen, onClose, onSubmit }) {
       })
       .then((json) => {
         if (onSubmit) onSubmit(json);
-        // Reset form
+        // Reset form (include status to avoid undefined)
         setTaskData({
           title: "",
           date: "",
           priority: "low",
+          status: "pending",
           description: "",
           image: null,
         });

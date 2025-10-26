@@ -17,6 +17,13 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Disable automatic trailing-slash redirects. Starlette by default issues
+# redirects when a route is defined without/with a trailing slash and the
+# request uses the other form; that can cause absolute redirects which are
+# problematic behind a proxy. Disabling this means the app will return 404
+# for mismatched trailing-slash paths instead of redirecting.
+app.router.redirect_slashes = False
+
 # Serve static files from /uploads
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/ProfilePage.css";
 import ChangePasswordModal from "./ChangePasswordModal";
 
@@ -7,6 +7,9 @@ function ProfilePage() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   const handleLogout = () => {
     // Clear any stored authentication data
@@ -17,21 +20,67 @@ function ProfilePage() {
   };
 
   const [profileData, setProfileData] = useState({
-    username: "amanuel",
-    firstName: "amanuel",
+    username: "",
+    firstName: "",
     lastName: "",
-    email: "amanuel@gmail.com",
+    email: "",
     contactNumber: "",
     position: "",
   });
 
-  // Mock user data
-  const user = {
-    name: "amanuel",
-    email: "amanuel@gmail.com",
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
     avatar:
-      "https://ui-avatars.com/api/?name=Amanuel&background=e07a5f&color=fff&size=128",
-  };
+      "https://ui-avatars.com/api/?name=User&background=e07a5f&color=fff&size=128",
+  });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch("/auth/me", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) {
+          if (res.status === 401) {
+            setError("Not authenticated. Please log in.");
+            setLoading(false);
+            return;
+          }
+          throw new Error(`Failed to load profile: ${res.status}`);
+        }
+        const json = await res.json();
+        setProfileData({
+          username: json.username || "",
+          firstName: json.firstname || json.firstName || "",
+          lastName: json.lastname || json.lastName || "",
+          email: json.email || "",
+          contactNumber: json.contact || "",
+          position: json.position || "",
+        });
+        const displayName =
+          json.firstname || json.username || json.email || "User";
+        setUser({
+          name: displayName,
+          email: json.email || "",
+          avatar:
+            json.avatar ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              displayName
+            )}&background=e07a5f&color=fff&size=128`,
+        });
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,31 +91,117 @@ function ProfilePage() {
   };
 
   const handleUpdateInfo = () => {
-    console.log("Updated profile data:", profileData);
-    // Here you would typically send the data to your backend
+    const doUpdate = async () => {
+      setError(null);
+      setUpdateLoading(true);
+      try {
+        const token = localStorage.getItem("access_token");
+        const payload = {
+          email: profileData.email || undefined,
+          username: profileData.username || undefined,
+          firstname: profileData.firstName || undefined,
+          lastname: profileData.lastName || undefined,
+          contact: profileData.contactNumber || undefined,
+          position: profileData.position || undefined,
+        };
 
-    // Show success message
-    setSuccessMessage("Profile updated successfully!");
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000); // Hide after 3 seconds
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch("/auth/me", {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(txt || `Failed to update profile: ${res.status}`);
+        }
+
+        const json = await res.json();
+        // Update UI state
+        setProfileData({
+          username: json.username || "",
+          firstName: json.firstname || json.firstName || "",
+          lastName: json.lastname || json.lastName || "",
+          email: json.email || "",
+          contactNumber: json.contact || "",
+          position: json.position || "",
+        });
+
+        const displayName =
+          json.firstname || json.username || json.email || "User";
+        setUser((u) => ({
+          ...u,
+          name: displayName,
+          email: json.email || u.email,
+        }));
+
+        setSuccessMessage("Profile updated successfully!");
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 3000);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Failed to update profile");
+      } finally {
+        setUpdateLoading(false);
+      }
+    };
+
+    doUpdate();
   };
 
   const handleChangePassword = () => {
     setShowChangePasswordModal(true);
   };
 
-  const handleChangePasswordSubmit = (passwordData) => {
-    console.log("Password change submitted:", passwordData);
-    // Here you would typically send the data to your backend
+  const handleChangePasswordSubmit = async (passwordData) => {
+    // Send change password request to backend
+    try {
+      const token = localStorage.getItem("access_token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    // Show success message
-    setSuccessMessage("Password changed successfully!");
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000); // Hide after 3 seconds
+      const body = JSON.stringify({
+        current_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      });
+
+      // prefer an explicit backend URL so requests hit the FastAPI server
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiBase}/auth/change-password`, {
+        method: "POST",
+        headers,
+        body,
+      });
+
+      if (!res.ok) {
+        // Try to parse JSON error body for a friendly message
+        let msg = `Failed: ${res.status}`;
+        try {
+          const json = await res.json();
+          msg = json.detail || json.message || JSON.stringify(json);
+        } catch (e) {
+          const txt = await res.text().catch(() => "");
+          if (txt) msg = txt;
+        }
+        // return failure so modal stays open and displays error
+        return { success: false, message: msg };
+      }
+
+      // success
+      setSuccessMessage("Password changed successfully!");
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+      return { success: true };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        message: err.message || "Failed to change password",
+      };
+    }
   };
 
   const handleImageUpload = (e) => {

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import EditTaskModal from "./EditTaskModal";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import "../styles/VitalTaskPage.css";
+import "../styles/DashboardPage.css";
 
 function VitalTaskPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,80 +19,284 @@ function VitalTaskPage() {
     window.location.href = "/login";
   };
 
-  // Mock user data
-  const user = {
-    name: "amanuel",
-    email: "amanuel@gmail.com",
+  // User state (loaded from backend /auth/me)
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
     avatar:
-      "https://ui-avatars.com/api/?name=Amanuel&background=e07a5f&color=fff&size=128",
+      "https://ui-avatars.com/api/?name=User&background=e07a5f&color=fff&size=128",
+  });
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch("/auth/me", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const displayName =
+          json.firstname || json.username || json.email || "User";
+        setUser({
+          name: displayName,
+          email: json.email || "",
+          avatar:
+            json.avatar ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              displayName
+            )}&background=e07a5f&color=fff&size=128`,
+        });
+      } catch (err) {
+        // ignore
+      }
+    };
+    loadUser();
+  }, []);
+
+  // Vital tasks loaded from backend (high priority)
+  const [vitalTasks, setVitalTasks] = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const detailRef = useRef(null);
+
+  // normalize image urls from backend
+  const getImageUrl = (image) => {
+    if (!image) return "";
+    if (/^https?:\/\//.test(image)) return image;
+    // remove a leading slash if present, then normalize
+    const cleaned = image.startsWith("/") ? image.slice(1) : image;
+    if (cleaned.startsWith("uploads/"))
+      return `http://localhost:8000/${cleaned}`;
+    return `http://localhost:8000/uploads/${cleaned}`;
+  };
+  const [detailImgError, setDetailImgError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const [notification, setNotification] = useState(null);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
+
+  // Helper: map backend priority to friendly label
+  const displayPriority = (p) => {
+    if (!p) return "";
+    const val = p.toString().toLowerCase();
+    if (val === "high") return "Extreme";
+    if (val === "medium") return "Moderate";
+    if (val === "low") return "Low";
+    return p;
   };
 
-  // Mock vital tasks data
-  const vitalTasks = [
-    {
-      id: 1,
-      title: "Walk the dog",
-      description: "Take the dog to the park and bring treats as well...",
-      priority: "Extreme",
-      status: "Not Started",
-      createdDate: "Created on 20/08/2023",
-      image:
-        "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop",
-    },
-    {
-      id: 2,
-      title: "Take grandma to hospital",
-      description: "Go back home and take grandma to the hosp...",
-      priority: "Moderate",
-      status: "In Progress",
-      createdDate: "Created on 20/08/2023",
-      image:
-        "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=300&fit=crop",
-    },
-  ];
+  // Helper: map backend status to friendly label
+  const displayStatus = (s) => {
+    if (!s) return "";
+    const val = s.toString().toLowerCase();
+    if (val === "in_progress" || val === "in-progress" || val === "in progress")
+      return "In Progress";
+    if (val === "pending") return "Not Started";
+    if (val === "completed") return "Completed";
+    return s;
+  };
 
-  // Handle edit task
-  const handleEditTask = () => {
-    setSelectedTaskForEdit(selectedTask);
+  // Fetch high-priority todos for current user
+  const fetchVitalTasks = React.useCallback(() => {
+    const token = localStorage.getItem("access_token");
+    // request only high priority tasks
+    fetch(`/todos?priority=high&size=20`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch vital tasks");
+        return res.json();
+      })
+      .then((data) => {
+        const items = data.todos || data;
+        setVitalTasks(items || []);
+        if (!selectedTask && items && items.length > 0)
+          setSelectedTask(items[0]);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, [selectedTask]);
+
+  useEffect(() => {
+    fetchVitalTasks();
+  }, [fetchVitalTasks]);
+
+  useEffect(() => {
+    if (detailRef.current) detailRef.current.scrollTop = 0;
+    // debug: print selected task and resolved image URL
+    if (selectedTask) {
+      try {
+        // eslint-disable-next-line no-console
+        console.log("[VitalTaskPage] selectedTask:", selectedTask);
+        // eslint-disable-next-line no-console
+        console.log(
+          "[VitalTaskPage] resolved image:",
+          getImageUrl(selectedTask.image)
+        );
+        // reset any previous image error whenever selection changes
+        setDetailImgError(false);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [selectedTask]);
+
+  // resolved image URL for the selected task (empty if none)
+  const selectedImageUrl = selectedTask ? getImageUrl(selectedTask.image) : "";
+  const imageUrlWithRetry = selectedImageUrl
+    ? `${selectedImageUrl}${
+        selectedImageUrl.includes("?") ? "&" : "?"
+      }r=${retryKey}`
+    : "";
+
+  // Handle edit task (open modal for a given task)
+  const handleEditTask = (task) => {
+    setSelectedTaskForEdit(task);
     setIsEditModalOpen(true);
   };
 
-  // Handle delete task
-  const handleDeleteTask = () => {
-    setSelectedTaskForDelete(selectedTask);
+  // Handle selecting a task (clear image error and set selection)
+  const handleSelect = (task) => {
+    // reset image error so image will attempt to load again
+    setDetailImgError(false);
+    // set selection
+    setSelectedTask(task);
+    // bump retry key to force re-request of image (cache-bust)
+    setRetryKey((k) => k + 1);
+    // eslint-disable-next-line no-console
+    console.log("[VitalTaskPage] task selected:", task?.id);
+  };
+
+  // Handle delete task (open delete confirm for a given task)
+  const handleDeleteTask = (task) => {
+    setSelectedTaskForDelete(task);
     setIsDeleteModalOpen(true);
   };
 
   // Handle edit task submission
   const handleEditSubmit = (updatedTaskData) => {
-    console.log("Updated task data:", updatedTaskData);
-    // Here you would typically update the task in your state/database
-    setIsEditModalOpen(false);
+    // send updated fields to backend for the selected task
+    if (!selectedTask) {
+      setIsEditModalOpen(false);
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    const url = `/todos/${selectedTask.id}`;
+
+    const form = new FormData();
+    if (updatedTaskData.title) form.append("title", updatedTaskData.title);
+    if (updatedTaskData.description)
+      form.append("description", updatedTaskData.description);
+    if (updatedTaskData.date) form.append("date", updatedTaskData.date);
+    // convert modal priority values back to backend values
+    const p = (updatedTaskData.priority || "").toString().toLowerCase();
+    let priorityValue = "";
+    if (p.includes("extreme") || p === "extreme") priorityValue = "high";
+    else if (p.includes("moderate") || p === "moderate")
+      priorityValue = "medium";
+    else if (p.includes("low")) priorityValue = "low";
+    if (priorityValue) form.append("priority", priorityValue);
+    if (updatedTaskData.status) form.append("status", updatedTaskData.status);
+    // image may be a File or a string (existing filename)
+    if (updatedTaskData.image && typeof updatedTaskData.image !== "string") {
+      form.append("image", updatedTaskData.image);
+    }
+
+    fetch(url, {
+      method: "PUT",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to update task");
+        return res.json();
+      })
+      .then((updated) => {
+        // update local list and selected task
+        setVitalTasks((prev) =>
+          prev.map((t) => (t.id === updated.id ? updated : t))
+        );
+        setSelectedTask(updated);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => setIsEditModalOpen(false));
   };
 
   // Handle delete confirmation
   const handleDeleteConfirm = () => {
-    console.log("Deleting task:", selectedTaskForDelete.title);
-    // Here you would typically remove the task from your state/database
-    setIsDeleteModalOpen(false);
+    if (!selectedTaskForDelete) {
+      setIsDeleteModalOpen(false);
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    const url = `/todos/${selectedTaskForDelete.id}`;
+    fetch(url, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to delete task");
+        return res.json();
+      })
+      .then((resp) => {
+        setVitalTasks((prev) =>
+          prev.filter((t) => t.id !== selectedTaskForDelete.id)
+        );
+        // pick next selected task (first in list) or null
+        setSelectedTask((prev) => {
+          const remaining = vitalTasks.filter(
+            (t) => t.id !== selectedTaskForDelete.id
+          );
+          return remaining.length > 0 ? remaining[0] : null;
+        });
+        const msg = (resp && resp.message) || "Todo deleted";
+        // notify Dashboard (if open) to show its slide-success message
+        try {
+          window.dispatchEvent(
+            new CustomEvent("todo:deleted", { detail: { message: msg } })
+          );
+        } catch (e) {}
+        // also show the same slide-success message locally
+        setDeleteMessage(msg);
+        setShowDeleteSuccess(true);
+        setTimeout(() => setShowDeleteSuccess(false), 3000);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setIsDeleteModalOpen(false));
   };
 
-  // Selected task details (right panel)
-  const selectedTask = {
-    title: "Walk the dog",
-    priority: "Extreme",
-    status: "Not Started",
-    description: "Take the dog to the park and bring treats as well.",
-    detailedDescription:
-      "Take Luffy and Jiro for a leisurely stroll around the neighborhood. Enjoy the fresh air and give them the exercise and mental stimulation they need for a happy and healthy day. Don't forget to bring along squeaky and fluffy for some extra fun along the way!",
-    activities: [
-      "Listen to a podcast or audiobook",
-      "Practice mindfulness or meditation",
-      "Take photos of interesting sights along the way",
-      "Practice obedience training with your dog",
-      "Chat with neighbors or other dog walkers",
-      "Listen to music or an upbeat playlist",
-    ],
+  // If no selectedTask yet, show placeholder
+  const emptySelected = {
+    title: "No vital task selected",
+    priority: "",
+    status: "",
+    description: "Select a task from the list to see details.",
+    detailedDescription: "",
+    activities: [],
+  };
+
+  // prefer explicit task.date or known backend fields; fallback to created_at
+  const formatTaskDate = (task) => {
+    if (!task) return "";
+    const candidates = [
+      task.date,
+      task.due_date,
+      task.dueDate,
+      task.created_at,
+      task.createdAt,
+    ];
+    const found = candidates.find((c) => c);
+    if (!found) return "";
+    try {
+      return new Date(found).toLocaleDateString();
+    } catch (e) {
+      return String(found);
+    }
   };
 
   return (
@@ -135,6 +340,25 @@ function VitalTaskPage() {
 
       {/* Main Content */}
       <main className="vitaltask-main">
+        {/* Slide-in delete message (same markup as Dashboard) */}
+        {showDeleteSuccess && (
+          <div className="slide-success-message">
+            <div className="slide-success-content">
+              <span className="slide-success-icon">🗑️</span>
+              <span className="slide-success-text">
+                {deleteMessage || "Todo deleted successfully!"}
+              </span>
+            </div>
+          </div>
+        )}
+        {notification && (
+          <div className="notification-banner">
+            {notification}
+            <button className="close-btn" onClick={() => setNotification(null)}>
+              
+            </button>
+          </div>
+        )}
         {/* Header */}
         <header className="vitaltask-header">
           <h1 className="vitaltask-title">
@@ -174,100 +398,185 @@ function VitalTaskPage() {
             </div>
 
             <div className="vital-task-list">
-              {vitalTasks.map((task) => (
-                <div key={task.id} className="vital-task-card">
-                  <div className="vital-task-main">
-                    <input type="checkbox" className="vital-task-checkbox" />
-                    <div className="vital-task-content">
-                      <h4 className="vital-task-title">{task.title}</h4>
-                      <p className="vital-task-description">
-                        {task.description}
-                      </p>
-                      <div className="vital-task-meta">
-                        <span
-                          className={`vital-task-priority priority-${task.priority.toLowerCase()}`}
-                        >
-                          Priority: {task.priority}
-                        </span>
-                        <span
-                          className={`vital-task-status status-${task.status
-                            .toLowerCase()
-                            .replace(" ", "-")}`}
-                        >
-                          Status: {task.status}
-                        </span>
+              {vitalTasks.length === 0 ? (
+                <div className="empty-vital">No vital tasks found.</div>
+              ) : (
+                vitalTasks.map((task) => {
+                  // normalize image URL
+                  const imageUrl = getImageUrl(task.image);
+                  const isSelected =
+                    selectedTask && selectedTask.id === task.id;
+                  return (
+                    <div
+                      key={task.id}
+                      className={`vital-task-card ${
+                        isSelected ? "selected" : ""
+                      }`}
+                      onClick={() => handleSelect(task)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div className="vital-task-main">
+                        <input
+                          type="checkbox"
+                          className="vital-task-checkbox"
+                        />
+                        <div className="vital-task-content">
+                          <h4 className="vital-task-title">{task.title}</h4>
+                          <p className="vital-task-description">
+                            {task.description}
+                          </p>
+                          <div className="vital-task-meta">
+                            <span
+                              className={`vital-task-priority priority-${(
+                                task.priority || ""
+                              )
+                                .toString()
+                                .toLowerCase()}`}
+                            >
+                              Priority: {displayPriority(task.priority)}
+                            </span>
+                            <span
+                              className={`vital-task-status status-${(
+                                task.status || ""
+                              )
+                                .toString()
+                                .toLowerCase()
+                                .replace(" ", "-")}`}
+                            >
+                              Status: {displayStatus(task.status)}
+                            </span>
+                          </div>
+                          <p className="vital-task-date">
+                            {formatTaskDate(task)}
+                          </p>
+                        </div>
+                        {imageUrl && (
+                          <img
+                            src={imageUrl}
+                            alt={task.title}
+                            className="vital-task-image"
+                            onError={(e) => (e.target.style.display = "none")}
+                          />
+                        )}
                       </div>
-                      <p className="vital-task-date">{task.createdDate}</p>
                     </div>
-                    <img
-                      src={task.image}
-                      alt={task.title}
-                      className="vital-task-image"
-                    />
-                  </div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </section>
 
           {/* Task Details Section */}
-          <section className="vital-detail-section">
+          <section className="vital-detail-section" ref={detailRef}>
             <div className="vital-detail-card">
               <div className="vital-detail-header">
-                <img
-                  src={vitalTasks[0].image}
-                  alt={selectedTask.title}
-                  className="detail-header-image"
-                />
+                {selectedImageUrl ? (
+                  !detailImgError ? (
+                    <img
+                      key={imageUrlWithRetry}
+                      src={imageUrlWithRetry}
+                      alt={
+                        (selectedTask && selectedTask.title) ||
+                        emptySelected.title
+                      }
+                      className="detail-header-image"
+                      onError={(e) => {
+                        // eslint-disable-next-line no-console
+                        console.warn(
+                          "detail image failed to load:",
+                          e?.target?.src
+                        );
+                        setDetailImgError(true);
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="detail-header-image-fallback"
+                      style={{
+                        backgroundImage: `url(${imageUrlWithRetry})`,
+                      }}
+                    />
+                  )
+                ) : null}
                 <div className="detail-header-info">
-                  <h3 className="detail-header-title">{selectedTask.title}</h3>
+                  <h3 className="detail-header-title">
+                    {(selectedTask && selectedTask.title) ||
+                      emptySelected.title}
+                  </h3>
                   <div className="detail-header-meta">
                     <span
-                      className={`detail-priority priority-${selectedTask.priority.toLowerCase()}`}
+                      className={`detail-priority priority-${(
+                        (selectedTask && selectedTask.priority) ||
+                        ""
+                      )
+                        .toString()
+                        .toLowerCase()}`}
                     >
-                      Priority: {selectedTask.priority}
+                      Priority:{" "}
+                      {displayPriority(
+                        (selectedTask && selectedTask.priority) ||
+                          emptySelected.priority
+                      )}
                     </span>
                     <span
-                      className={`detail-status status-${selectedTask.status
+                      className={`detail-status status-${(
+                        (selectedTask && selectedTask.status) ||
+                        ""
+                      )
+                        .toString()
                         .toLowerCase()
                         .replace(" ", "-")}`}
                     >
-                      Status: {selectedTask.status}
+                      Status:{" "}
+                      {displayStatus(
+                        (selectedTask && selectedTask.status) ||
+                          emptySelected.status
+                      )}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="vital-detail-content">
-                <p className="detail-short-desc">{selectedTask.description}</p>
+                <p className="detail-short-desc">
+                  {(selectedTask && selectedTask.description) ||
+                    emptySelected.description}
+                </p>
                 <p className="detail-long-desc">
-                  {selectedTask.detailedDescription}
+                  {(selectedTask && selectedTask.detailedDescription) ||
+                    emptySelected.detailedDescription}
                 </p>
 
                 <div className="detail-activities">
                   <ol className="activities-list">
-                    {selectedTask.activities.map((activity, index) => (
+                    {(selectedTask &&
+                    selectedTask.activities &&
+                    selectedTask.activities.length > 0
+                      ? selectedTask.activities
+                      : emptySelected.activities
+                    ).map((activity, index) => (
                       <li key={index} className="activity-item">
                         {activity}
                       </li>
                     ))}
                   </ol>
                 </div>
-
-                <div className="detail-actions">
-                  <button
-                    className="action-btn edit-btn"
-                    onClick={handleEditTask}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    className="action-btn delete-btn"
-                    onClick={handleDeleteTask}
-                  >
-                    🗑️
-                  </button>
-                </div>
+              </div>
+              <div className="detail-actions">
+                <button
+                  className="action-btn edit-btn"
+                  onClick={() => handleEditTask(selectedTask)}
+                  disabled={!selectedTask}
+                >
+                  ✏️
+                </button>
+                <button
+                  className="action-btn delete-btn"
+                  onClick={() => handleDeleteTask(selectedTask)}
+                  disabled={!selectedTask}
+                >
+                  🗑️
+                </button>
               </div>
             </div>
           </section>

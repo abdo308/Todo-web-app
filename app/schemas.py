@@ -90,3 +90,19 @@ class TokenData(BaseModel):
 # Response Schemas
 class MessageResponse(BaseModel):
     message: str
+
+
+# Change password request
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+# Schema for updating user fields (partial)
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    username: Optional[str] = None
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    contact: Optional[str] = None
+    position: Optional[str] = None

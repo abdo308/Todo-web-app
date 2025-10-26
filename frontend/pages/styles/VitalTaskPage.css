@@ -9,6 +9,13 @@
   font-family: "Segoe UI", "Roboto", "Arial", sans-serif;
 }
 
+/* ensure page fills viewport like dashboard and avoid body bleed */
+.vitaltask-container {
+  width: 100vw;
+  position: relative;
+  overflow-x: hidden;
+}
+
 /* Sidebar Styles */
 .vitaltask-sidebar {
   width: 280px;
@@ -115,8 +122,10 @@
 .vitaltask-main {
   margin-left: 280px;
   flex: 1;
-  padding: 2rem;
-  width: calc(100% - 280px);
+  /* tighten padding to match Dashboard spacing */
+  padding: 1.25rem;
+  /* use viewport width so main content fills to the right edge */
+  width: calc(100vw - 280px);
 }
 
 /* Header */
@@ -210,15 +219,19 @@
 /* Content Grid */
 .vitaltask-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  /* match dashboard proportions: main column slightly larger */
+  grid-template-columns: 1.5fr 1fr;
+  /* slightly tighter gap to align with dashboard visuals */
+  gap: 1.5rem;
+  align-items: start; /* allow columns to size to their own content */
 }
 
 /* Vital Tasks List Section */
 .vital-list-section {
   background: #fff;
   border-radius: 16px;
-  padding: 1.5rem;
+  /* keep a bit less inner padding so the list lines up with the status panel */
+  padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -244,6 +257,9 @@
   padding: 1rem;
   border: 1px solid #eee;
   transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .vital-task-card:hover {
@@ -255,6 +271,8 @@
   display: flex;
   gap: 1rem;
   align-items: flex-start;
+  flex: 1;
+  position: relative;
 }
 
 .vital-task-checkbox {
@@ -296,19 +314,30 @@
   border-radius: 4px;
 }
 
+/* Priority badge colors
+   - high / extreme => red-ish
+   - medium / moderate => orange-ish
+   - low / normal => green-ish (user asked green for low)
+   Keep subtle background with stronger text color similar to status badges */
+.priority-high,
 .priority-extreme {
-  background: #ffe0e0;
-  color: #d32f2f;
+  background: #ffecec; /* very light red */
+  color: #c62828; /* darker red text */
+  border: 1px solid rgba(198, 40, 40, 0.08);
 }
 
+.priority-medium,
 .priority-moderate {
-  background: #fff3e0;
-  color: #ef6c00;
+  background: #fff4e6; /* very light orange */
+  color: #e65100; /* orange text */
+  border: 1px solid rgba(230, 81, 0, 0.06);
 }
 
+.priority-low,
 .priority-normal {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8f6ec; /* very light green */
+  color: #2e7d32; /* green text */
+  border: 1px solid rgba(46, 125, 50, 0.06);
 }
 
 .vital-task-status {
@@ -332,6 +361,27 @@
   color: #2e7d32;
 }
 
+/* Aliases and additional status variants to handle backend differences */
+.status-pending,
+.status-not_started,
+.status-not-started {
+  background: #fff3e0; /* orange-ish */
+  color: #ef6c00;
+}
+
+.status-in_progress,
+.status-in-progress,
+.status-inprogress {
+  background: #e3f2fd; /* blue-ish */
+  color: #1976d2;
+}
+
+.status-completed,
+.status-done {
+  background: #e0f7e0; /* green-ish */
+  color: #2e7d32;
+}
+
 .vital-task-date {
   font-size: 0.75rem;
   color: #999;
@@ -349,10 +399,11 @@
 .vital-detail-section {
   background: #fff;
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
+  /* allow the card to grow with its content instead of constraining height */
+  position: relative; /* anchor actions to the visible card container */
+  align-self: start;
 }
 
 .vital-detail-card {
@@ -373,6 +424,17 @@
   margin-bottom: 1rem;
 }
 
+.detail-header-image-fallback {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 1rem;
+  display: block;
+  background-color: #f3f3f3;
+}
+
 .detail-header-info {
   display: flex;
   flex-direction: column;
@@ -391,12 +453,59 @@
   gap: 1rem;
 }
 
+.detail-date {
+  font-size: 0.85rem;
+  color: #777;
+  align-self: center;
+}
+
+/* simple notification banner */
+.notification-banner {
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  background: #e6ffed;
+  color: #1b5e20;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 1200;
+  font-weight: 600;
+}
+
+.notification-banner .close-btn {
+  background: transparent;
+  border: none;
+  margin-left: 0.75rem;
+  cursor: pointer;
+  color: inherit;
+}
+
 .detail-priority,
 .detail-status {
   font-size: 0.85rem;
   font-weight: 500;
   padding: 0.4rem 0.75rem;
   border-radius: 6px;
+}
+
+/* Detail view variants for priorities (slightly stronger background) */
+.detail-priority.priority-high,
+.detail-priority.priority-extreme {
+  background: #ffdede;
+  color: #b71c1c;
+}
+
+.detail-priority.priority-medium,
+.detail-priority.priority-moderate {
+  background: #fff1de;
+  color: #d84315;
+}
+
+.detail-priority.priority-low,
+.detail-priority.priority-normal {
+  background: #e6f4ea;
+  color: #1b5e20;
 }
 
 .vital-detail-content {
@@ -438,11 +547,24 @@
   line-height: 1.6;
 }
 
+.vital-detail-content {
+  /* leave space at the bottom so absolutely-positioned buttons won't overlap content */
+  padding-bottom: 4.5rem;
+}
+
 .detail-actions {
   display: flex;
   gap: 1rem;
-  margin-top: 1rem;
   justify-content: flex-end;
+  position: absolute;
+  right: 1.25rem; /* align to inner card padding */
+  bottom: 1.25rem;
+  z-index: 40;
+}
+
+.detail-actions .action-btn {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  border: 4px solid #fff; /* white ring to match floating FAB look */
 }
 
 .action-btn {
@@ -487,7 +609,17 @@
   .vital-detail-section {
     max-height: none;
   }
+
+  /* On narrower screens keep the action buttons in the normal flow below content */
+  .detail-actions {
+    position: static;
+    margin-top: 1rem;
+    justify-content: flex-end;
+  }
 }
+
+/* make action buttons visually float on the card edge */
+/* keep original button styles */
 
 @media (max-width: 768px) {
   .vitaltask-sidebar {
