@@ -4,6 +4,21 @@ import DeleteConfirmModal from "./DeleteConfirmModal";
 import "../styles/MyTaskPage.css";
 import "../styles/VitalTaskPage.css";
 
+// normalize image urls from backend (same logic as other pages)
+const apiBase = import.meta.env.VITE_API_URL || "";
+const joinUrl = (base, path) => {
+  const b = (base || "").replace(/\/$/, "");
+  const p = (path || "").replace(/^\//, "");
+  return b ? `${b}/${p}` : `/${p}`;
+};
+const getImageUrl = (image) => {
+  if (!image) return "";
+  if (/^https?:\/\//.test(image)) return image;
+  const cleaned = image.startsWith("/") ? image.slice(1) : image;
+  if (cleaned.startsWith("uploads/")) return joinUrl(apiBase, cleaned);
+  return joinUrl(apiBase, `uploads/${cleaned}`);
+};
+
 function MyTaskPage() {
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -393,64 +408,70 @@ function MyTaskPage() {
               {displayedTasks.length === 0 ? (
                 <div className="empty-mytask">There is no task.</div>
               ) : (
-                displayedTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`vital-task-card ${
-                      selectedTask && selectedTask.id === task.id
-                        ? "selected"
-                        : ""
-                    }`}
-                    onClick={() => setSelectedTask(task)}
-                  >
-                    <div className="vital-task-main">
-                      <input type="checkbox" className="vital-task-checkbox" />
-                      <div className="vital-task-content">
-                        <h4 className="vital-task-title">{task.title}</h4>
-                        <p className="vital-task-description">
-                          {task.description}
-                        </p>
-                        <div className="vital-task-meta">
-                          <span
-                            className={`vital-task-priority priority-${(
-                              task.priority || ""
-                            )
-                              .toString()
-                              .toLowerCase()}`}
-                          >
-                            Priority: {task.priority}
-                          </span>
-                          <span
-                            className={`vital-task-status status-${(
-                              task.status || "pending"
-                            )
-                              .toString()
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                          >
-                            Status: {displayStatusFriendly(task.status)}
-                          </span>
-                        </div>
-                        <p className="vital-task-date">
-                          {formatTaskDate(
-                            task.date ||
-                              task.created_at ||
-                              task.createdAt ||
-                              task.createdDate
-                          )}
-                        </p>
-                      </div>
-                      {task.image && (
-                        <img
-                          src={task.image}
-                          alt={task.title}
-                          className="vital-task-image"
-                          onError={(e) => (e.target.style.display = "none")}
+                displayedTasks.map((task) => {
+                  const imageUrl = getImageUrl(task.image);
+                  return (
+                    <div
+                      key={task.id}
+                      className={`vital-task-card ${
+                        selectedTask && selectedTask.id === task.id
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() => setSelectedTask(task)}
+                    >
+                      <div className="vital-task-main">
+                        <input
+                          type="checkbox"
+                          className="vital-task-checkbox"
                         />
-                      )}
+                        <div className="vital-task-content">
+                          <h4 className="vital-task-title">{task.title}</h4>
+                          <p className="vital-task-description">
+                            {task.description}
+                          </p>
+                          <div className="vital-task-meta">
+                            <span
+                              className={`vital-task-priority priority-${(
+                                task.priority || ""
+                              )
+                                .toString()
+                                .toLowerCase()}`}
+                            >
+                              Priority: {task.priority}
+                            </span>
+                            <span
+                              className={`vital-task-status status-${(
+                                task.status || "pending"
+                              )
+                                .toString()
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
+                            >
+                              Status: {displayStatusFriendly(task.status)}
+                            </span>
+                          </div>
+                          <p className="vital-task-date">
+                            {formatTaskDate(
+                              task.date ||
+                                task.created_at ||
+                                task.createdAt ||
+                                task.createdDate
+                            )}
+                          </p>
+                        </div>
+                        {imageUrl && (
+                          <img
+                            src={imageUrl}
+                            alt={task.title}
+                            className="vital-task-image"
+                            onError={(e) => (e.target.style.display = "none")}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </section>
@@ -462,7 +483,7 @@ function MyTaskPage() {
                 <div className="detail-header">
                   {selectedTask.image && (
                     <img
-                      src={selectedTask.image}
+                      src={getImageUrl(selectedTask.image)}
                       alt={selectedTask.title}
                       className="detail-header-image"
                     />

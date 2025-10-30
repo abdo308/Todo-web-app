@@ -169,7 +169,8 @@ function ProfilePage() {
       });
 
       // prefer an explicit backend URL so requests hit the FastAPI server
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      // default to same-origin (empty string) so nginx can proxy requests in k8s
+      const apiBase = import.meta.env.VITE_API_URL || "";
       const res = await fetch(`${apiBase}/auth/change-password`, {
         method: "POST",
         headers,

@@ -30,3 +30,8 @@ docker-compose*.yml
 
 # Development scripts
 generate_secret.py
+
+./k8s
+./frontend
+Jenkinsfile
+README.md

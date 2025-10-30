@@ -60,14 +60,20 @@ function VitalTaskPage() {
   const detailRef = useRef(null);
 
   // normalize image urls from backend
+  const apiBase = import.meta.env.VITE_API_URL || "";
+  const joinUrl = (base, path) => {
+    const b = (base || "").replace(/\/$/, "");
+    const p = (path || "").replace(/^\//, "");
+    return b ? `${b}/${p}` : `/${p}`;
+  };
+
   const getImageUrl = (image) => {
     if (!image) return "";
     if (/^https?:\/\//.test(image)) return image;
     // remove a leading slash if present, then normalize
     const cleaned = image.startsWith("/") ? image.slice(1) : image;
-    if (cleaned.startsWith("uploads/"))
-      return `http://localhost:8000/${cleaned}`;
-    return `http://localhost:8000/uploads/${cleaned}`;
+    if (cleaned.startsWith("uploads/")) return joinUrl(apiBase, cleaned);
+    return joinUrl(apiBase, `uploads/${cleaned}`);
   };
   const [detailImgError, setDetailImgError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
