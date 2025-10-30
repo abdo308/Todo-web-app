@@ -259,6 +259,14 @@ function DashboardPage() {
     loadUser();
   }, []);
 
+  // API base for images (empty = same-origin where nginx will proxy /uploads/ to backend)
+  const apiBase = import.meta.env.VITE_API_URL || "";
+  const joinUrl = (base, path) => {
+    const b = (base || "").replace(/\/$/, "");
+    const p = (path || "").replace(/^\//, "");
+    return b ? `${b}/${p}` : `/${p}`;
+  };
+
   // Fetch tasks from backend
   const [tasks, setTasks] = useState([]);
   React.useEffect(() => {
@@ -374,10 +382,10 @@ function DashboardPage() {
 
             <div className="task-list">
               {todoTasks.map((task) => {
-                // Fix image URL: if image is just a filename, prepend /uploads/
+                // Fix image URL: if image is just a filename, prepend /uploads/ and use apiBase when provided
                 let imageUrl = task.image;
                 if (imageUrl && !/^https?:\/\//.test(imageUrl)) {
-                  imageUrl = `http://localhost:8000/uploads/${imageUrl}`;
+                  imageUrl = joinUrl(apiBase, `uploads/${imageUrl}`);
                 }
                 return (
                   <div
@@ -508,7 +516,7 @@ function DashboardPage() {
                   ct.image && /^https?:/.test(ct.image)
                     ? ct.image
                     : ct.image
-                    ? `http://localhost:8000/uploads/${ct.image}`
+                    ? joinUrl(apiBase, `uploads/${ct.image}`)
                     : null;
                 return (
                   <div

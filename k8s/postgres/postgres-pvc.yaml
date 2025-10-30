@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  labels:
+    app: todo-postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # If your cluster requires a specific storageClass, set it here. Leaving this
+  # field out uses the cluster default StorageClass which is usually the safest
+  # choice for portability.
