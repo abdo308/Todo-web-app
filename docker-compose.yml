@@ -33,7 +33,7 @@ services:
     ports:
       - "3000:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.d:/etc/nginx/conf.d:ro
     depends_on:
       - frontend
       - api
