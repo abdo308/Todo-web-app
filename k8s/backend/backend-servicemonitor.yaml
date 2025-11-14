@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: todo-backend-monitor
+  namespace: monitoring
+  labels:
+    app: todo-backend
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: todo-backend
+  namespaceSelector:
+    matchNames:
+    - default
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s

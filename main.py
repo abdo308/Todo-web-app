@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
 from app.models import Base
 from app.routes import auth, todos
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -16,7 +17,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
-
+Instrumentator().instrument(app).expose(app)
 # Disable automatic trailing-slash redirects. Starlette by default issues
 # redirects when a route is defined without/with a trailing slash and the
 # request uses the other form; that can cause absolute redirects which are
