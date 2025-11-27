@@ -45,6 +45,7 @@ A production-ready Todo application built to demonstrate enterprise DevOps pract
 - **PostgreSQL** — Relational database
 - **Nginx** — Reverse proxy and static file serving
 - **Prometheus & Grafana** — Monitoring and observability (planned/mentioned)
+- **Google Calendar API** — Task synchronization to Google Calendar
 
 Other tools: docker-compose (local dev), GitHub Actions (mentioned), and standard DevOps/infra-as-code practices.
 
@@ -219,8 +220,69 @@ Below are the main API endpoints exposed by the FastAPI backend:
   - `DELETE /todos/{id}` — Delete a todo by ID
 
 - **Uploads**
+
   - `POST /todos` (with image) — Upload an image as part of todo creation
   - `GET /uploads/{filename}` — Retrieve uploaded image by filename
+
+- **Google Calendar Integration**
+  - `GET /google-calendar/auth` — Initiate Google OAuth flow
+  - `GET /google-calendar/callback` — Handle Google OAuth callback
+  - `POST /google-calendar/sync` — Sync all tasks to Google Calendar
+  - `GET /google-calendar/status` — Check if Google Calendar is connected
+  - `DELETE /google-calendar/disconnect` — Disconnect Google Calendar
+
+---
+
+## Google Calendar Setup
+
+To enable Google Calendar synchronization:
+
+1. **Create Google Cloud Project**
+
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+
+2. **Enable Google Calendar API**
+
+   - In the Google Cloud Console, go to "APIs & Services" → "Library"
+   - Search for "Google Calendar API" and enable it
+
+3. **Create OAuth 2.0 Credentials**
+
+   - Go to "APIs & Services" → "Credentials"
+   - Click "Create Credentials" → "OAuth client ID"
+   - Choose "Web application"
+   - Add authorized redirect URIs:
+     - For local development: `http://localhost:8000/google-calendar/callback`
+     - For production: `https://your-domain.com/google-calendar/callback`
+   - Click "Create" and copy your Client ID and Client Secret
+
+4. **Configure Environment Variables**
+
+   - Copy `.env.example` to `.env`
+   - Add your Google credentials:
+     ```bash
+     GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+     GOOGLE_CLIENT_SECRET=your-client-secret
+     GOOGLE_REDIRECT_URI=http://localhost:8000/google-calendar/callback
+     ```
+
+5. **Install Dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+6. **Database Migration**
+
+   - The `google_calendar_token` column will be automatically added to the users table
+   - If using an existing database, you may need to run migrations
+
+7. **Using the Feature**
+   - Click the calendar button (📅) in the top right corner of the dashboard
+   - Authorize the app to access your Google Calendar
+   - All your tasks will be synced with their respective dates/times
+   - Tasks without dates will be scheduled for the next day at 9 AM
 
 ---
 

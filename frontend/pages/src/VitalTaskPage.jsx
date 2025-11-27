@@ -10,6 +10,9 @@ function VitalTaskPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTaskForEdit, setSelectedTaskForEdit] = useState(null);
   const [selectedTaskForDelete, setSelectedTaskForDelete] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
+  const [showSyncMessage, setShowSyncMessage] = useState(false);
 
   const handleLogout = () => {
     // Clear any stored authentication data
@@ -17,6 +20,131 @@ function VitalTaskPage() {
     localStorage.removeItem("user");
     // Redirect to login page
     window.location.href = "/login";
+  };
+
+  const handleGoogleCalendarSync = async () => {
+    setIsSyncing(true);
+    setSyncMessage("");
+
+    try {
+      const token = localStorage.getItem("access_token");
+
+      const statusRes = await fetch("/google-calendar/status", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!statusRes.ok) throw new Error("Failed to check calendar status");
+      const statusData = await statusRes.json();
+
+      if (!statusData.connected) {
+        const authRes = await fetch("/google-calendar/auth", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        if (!authRes.ok) throw new Error("Failed to initiate Google auth");
+        const authData = await authRes.json();
+
+        const width = 600;
+        const height = 700;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
+        const authWindow = window.open(
+          authData.authorization_url,
+          "Google Calendar Authorization",
+          `width=${width},height=${height},top=${top},left=${left}`
+        );
+
+        let authCompleted = false;
+
+        // Listen for postMessage from popup
+        const messageHandler = (event) => {
+          if (event.data && event.data.type === "GOOGLE_CALENDAR_SUCCESS") {
+            if (!authCompleted) {
+              authCompleted = true;
+              window.removeEventListener("message", messageHandler);
+              setTimeout(() => syncTasksToCalendar(), 1000);
+            }
+          }
+        };
+        window.addEventListener("message", messageHandler);
+
+        // Also poll for localStorage (backup method)
+        let lastAuthTime = localStorage.getItem("google_calendar_auth_time");
+        const pollTimer = setInterval(async () => {
+          const authStatus = localStorage.getItem(
+            "google_calendar_auth_status"
+          );
+          const authTime = localStorage.getItem("google_calendar_auth_time");
+
+          if (authStatus === "success" && authTime !== lastAuthTime) {
+            if (!authCompleted) {
+              authCompleted = true;
+              clearInterval(pollTimer);
+              window.removeEventListener("message", messageHandler);
+              localStorage.removeItem("google_calendar_auth_status");
+              localStorage.removeItem("google_calendar_auth_time");
+
+              // Token was saved by backend, now sync the tasks
+              setTimeout(() => syncTasksToCalendar(), 1000);
+            }
+          } else if (authStatus === "error") {
+            if (!authCompleted) {
+              authCompleted = true;
+              clearInterval(pollTimer);
+              window.removeEventListener("message", messageHandler);
+              const errorMsg =
+                localStorage.getItem("google_calendar_auth_error") ||
+                "Unknown error";
+              localStorage.removeItem("google_calendar_auth_status");
+              localStorage.removeItem("google_calendar_auth_error");
+              setSyncMessage("Authorization failed: " + errorMsg);
+              setShowSyncMessage(true);
+              setTimeout(() => setShowSyncMessage(false), 4000);
+              setIsSyncing(false);
+            }
+          }
+        }, 500);
+
+        setSyncMessage("Opening Google authorization...");
+        setShowSyncMessage(true);
+      } else {
+        await syncTasksToCalendar();
+      }
+    } catch (error) {
+      console.error("Calendar sync error:", error);
+      setSyncMessage("Failed to connect to Google Calendar: " + error.message);
+      setShowSyncMessage(true);
+      setTimeout(() => setShowSyncMessage(false), 4000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const syncTasksToCalendar = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const syncRes = await fetch("/google-calendar/sync", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!syncRes.ok) {
+        const errorData = await syncRes.json();
+        throw new Error(errorData.detail || "Failed to sync tasks");
+      }
+
+      const syncData = await syncRes.json();
+      setSyncMessage(
+        `✓ Successfully synced ${syncData.successful} tasks to Google Calendar!`
+      );
+      setShowSyncMessage(true);
+      setTimeout(() => setShowSyncMessage(false), 5000);
+    } catch (error) {
+      setSyncMessage("Failed to sync: " + error.message);
+      setShowSyncMessage(true);
+      setTimeout(() => setShowSyncMessage(false), 4000);
+    }
   };
 
   // User state (loaded from backend /auth/me)
@@ -384,8 +512,13 @@ function VitalTaskPage() {
             </div>
 
             <button className="icon-btn">🔔</button>
-            <button className="icon-btn calendar-btn">
-              <span>📅</span>
+            <button
+              className="icon-btn calendar-btn"
+              onClick={handleGoogleCalendarSync}
+              disabled={isSyncing}
+              title="Sync tasks to Google Calendar"
+            >
+              <span>{isSyncing ? "⏳" : "📅"}</span>
               <span className="date-text">
                 Tuesday
                 <br />
@@ -604,6 +737,16 @@ function VitalTaskPage() {
         onConfirm={handleDeleteConfirm}
         taskTitle={selectedTaskForDelete?.title || ""}
       />
+
+      {/* Google Calendar sync message */}
+      {showSyncMessage && (
+        <div className="slide-success-message">
+          <div className="slide-success-content">
+            <span className="slide-success-icon">📅</span>
+            <span className="slide-success-text">{syncMessage}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

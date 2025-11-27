@@ -64,6 +64,25 @@ data:
         proxy_redirect ~^https?://[^/]+(/.*)$ $scheme://$http_host$1;
       }
 
+      location ^~ /google-calendar/ {
+        proxy_pass http://api:8000/google-calendar/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;
+        if ($request_method = 'OPTIONS') {
+          add_header 'Access-Control-Allow-Origin' '*' always;
+          add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH' always;
+          add_header 'Access-Control-Allow-Headers' 'Authorization,Content-Type' always;
+          return 204;
+        }
+
+        proxy_redirect http://localhost/ http://localhost:3000/;
+        proxy_redirect http://127.0.0.1/ http://127.0.0.1:3000/;
+        proxy_redirect ~^https?://[^/]+(/.*)$ $scheme://$http_host$1;
+      }
+
       # Serve uploaded files by proxying /uploads/ to the API which mounts StaticFiles
       location ^~ /uploads/ {
         proxy_pass http://api:8000/uploads/;

@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
 from app.models import Base
-from app.routes import auth, todos
+from app.routes import auth, todos, google_calendar
 from prometheus_fastapi_instrumentator import Instrumentator
 
 # Create database tables
@@ -40,6 +40,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(todos.router)
+app.include_router(google_calendar.router)
 
 @app.get("/")
 async def root():
