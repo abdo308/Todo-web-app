@@ -31,6 +31,9 @@ data/
 .env.local
 .env.production
 
+# Kubernetes secrets (actual secrets, not examples)
+k8s/backend/backend-secret.yaml
+
 # IDE
 .vscode/
 .idea/

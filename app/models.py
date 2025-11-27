@@ -16,6 +16,8 @@ class User(Base):
     position = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # Google Calendar OAuth tokens (stored as JSON string)
+    google_calendar_token = Column(String, nullable=True)
     # Relationship with todos
     todos = relationship("Todo", back_populates="owner", cascade="all, delete-orphan")
 
