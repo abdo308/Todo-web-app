@@ -4,6 +4,7 @@ metadata:
   name: api
   labels:
     app: todo-backend
+    job: todo-backend # Add this for Prometheus job label
 spec:
   type: ClusterIP
   selector:

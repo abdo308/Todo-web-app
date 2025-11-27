@@ -12,8 +12,8 @@ spec:
       app: todo-backend
   namespaceSelector:
     matchNames:
-    - default
+      - default
   endpoints:
-  - port: http
-    path: /metrics
-    interval: 30s
+    - port: http
+      path: /metrics
+      interval: 30s

@@ -233,56 +233,249 @@ Below are the main API endpoints exposed by the FastAPI backend:
 
 ---
 
-## Google Calendar Setup
+## 🚀 Quick Start
 
-To enable Google Calendar synchronization:
+### Prerequisites
 
-1. **Create Google Cloud Project**
+- **Minikube** installed and running
+- **kubectl** configured
+- **Docker** installed
+- **Git** installed
+- **Helm** installed (for monitoring stack)
 
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
+### Setup Instructions
 
-2. **Enable Google Calendar API**
+1. **Clone the repository**
 
-   - In the Google Cloud Console, go to "APIs & Services" → "Library"
+   ```bash
+   git clone https://github.com/abdo308/Todo-web-app.git
+   cd Todo-web-app
+   ```
+
+2. **Configure Google Calendar (Optional)**
+
+   To enable Google Calendar sync:
+
+   a. Create a Google Cloud Project at [console.cloud.google.com](https://console.cloud.google.com/)
+
+   b. Enable Google Calendar API:
+
+   - Go to "APIs & Services" → "Library"
    - Search for "Google Calendar API" and enable it
 
-3. **Create OAuth 2.0 Credentials**
+   c. Create OAuth 2.0 Credentials:
 
    - Go to "APIs & Services" → "Credentials"
    - Click "Create Credentials" → "OAuth client ID"
    - Choose "Web application"
    - Add authorized redirect URIs:
-     - For local development: `http://localhost:8000/google-calendar/callback`
-     - For production: `https://your-domain.com/google-calendar/callback`
-   - Click "Create" and copy your Client ID and Client Secret
+     - `http://localhost:3000/google-calendar/callback`
+     - `http://localhost:5173/google-calendar/callback`
+   - Copy your Client ID and Client Secret
 
-4. **Configure Environment Variables**
-
-   - Copy `.env.example` to `.env`
-   - Add your Google credentials:
-     ```bash
-     GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-     GOOGLE_CLIENT_SECRET=your-client-secret
-     GOOGLE_REDIRECT_URI=http://localhost:8000/google-calendar/callback
-     ```
-
-5. **Install Dependencies**
+   d. Configure the secret:
 
    ```bash
-   pip install -r requirements.txt
+   cp k8s/backend/backend-secret.yaml.example k8s/backend/backend-secret.yaml
    ```
 
-6. **Database Migration**
+   Edit `k8s/backend/backend-secret.yaml` and replace:
 
-   - The `google_calendar_token` column will be automatically added to the users table
-   - If using an existing database, you may need to run migrations
+   - `YOUR_GOOGLE_CLIENT_ID_HERE` with your actual Client ID
+   - `YOUR_GOOGLE_CLIENT_SECRET_HERE` with your actual Client Secret
 
-7. **Using the Feature**
-   - Click the calendar button (📅) in the top right corner of the dashboard
+3. **Start the application**
+
+   ```bash
+   chmod +x start.sh
+   ./start.sh
+   ```
+
+   The script will:
+
+   - Deploy PostgreSQL database
+   - Deploy backend (FastAPI) and frontend (React)
+   - Deploy Nginx reverse proxy
+   - Set up port forwarding to `localhost:3000`
+
+4. **Access the application**
+
+   Open your browser at: **http://localhost:3000**
+
+5. **Using Google Calendar Sync**
+   - Create an account and login
+   - Click the calendar button (📅) in the top right corner
    - Authorize the app to access your Google Calendar
-   - All your tasks will be synced with their respective dates/times
-   - Tasks without dates will be scheduled for the next day at 9 AM
+   - Your tasks will be synced with their respective dates/times
+   - Tasks without dates are scheduled for the next day at 9 AM
+
+---
+
+## 📊 Monitoring Setup (Optional)
+
+To enable Prometheus and Grafana monitoring:
+
+1. **Install Helm** (if not already installed)
+
+   ```bash
+   # On Linux
+   snap install helm --classic
+
+   # Or download from https://helm.sh/docs/intro/install/
+   ```
+
+2. **Install Prometheus Stack**
+
+   ```bash
+   # Add Prometheus community charts
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+
+   # Install kube-prometheus-stack
+   helm install monitoring prometheus-community/kube-prometheus-stack \
+     --namespace monitoring --create-namespace
+   ```
+
+3. **Start Monitoring Port Forwards**
+
+   ```bash
+   # Grafana (port 3001)
+   chmod +x grafana.sh
+   ./grafana.sh
+
+   # Prometheus (port 9092)
+   chmod +x prometheus.sh
+   ./prometheus.sh
+   ```
+
+4. **Access Monitoring Tools**
+
+   **Grafana Dashboard:**
+
+   - URL: http://localhost:3001
+   - Get admin password:
+     ```bash
+     kubectl get secret -n monitoring monitoring-grafana \
+       -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+     ```
+   - Login with username: `admin` and the password from above
+
+   **Prometheus:**
+
+   - URL: http://localhost:9092
+
+5. **Import Dashboard**
+
+   In Grafana:
+
+   - Go to Dashboards → Import
+   - Click "Upload JSON file"
+   - Select `k8s/monitoring/todo-dashboard.json`
+   - Choose the Prometheus data source
+   - Click Import
+
+   The dashboard includes:
+
+   - HTTP Request Rate by endpoint
+   - Request Duration (Latency) - 95th and 50th percentile
+   - HTTP Status Codes distribution
+   - Success Rate percentage
+   - Total Request count
+
+6. **Generate Test Traffic** (Optional)
+
+   To see live metrics on the dashboard:
+
+   ```bash
+   # Run continuous load test
+   python3 load_test.py
+
+   # Press Ctrl+C to stop
+   ```
+
+   The load test will send requests continuously and you'll see real-time metrics in Grafana.
+
+---
+
+## 🧪 Testing the Application
+
+### Manual Testing
+
+1. Register a new account
+2. Login with your credentials
+3. Create, edit, and delete tasks
+4. Upload task images
+5. Test Google Calendar sync (if configured)
+6. Test priority levels and due dates
+
+### Load Testing
+
+```bash
+# Install dependencies if needed
+pip3 install requests
+
+# Run load test (sends 100 requests)
+python3 load_test.py
+
+# Or run continuous load test (until stopped)
+# Edit load_test.py and set NUM_REQUESTS = None
+python3 load_test.py
+```
+
+---
+
+## 🛑 Stopping the Application
+
+```bash
+# Stop port forwarding
+pkill -f "kubectl port-forward"
+
+# Delete all Kubernetes resources
+chmod +x delete.sh
+./delete.sh
+
+# Or manually
+kubectl delete -f k8s/backend/
+kubectl delete -f k8s/frontend/
+kubectl delete -f k8s/postgres/
+kubectl delete -f k8s/nginx/
+```
+
+To also remove monitoring stack:
+
+```bash
+helm uninstall monitoring -n monitoring
+kubectl delete namespace monitoring
+```
+
+---
+
+## 🐳 Docker Compose (Alternative)
+
+For local development without Kubernetes:
+
+```bash
+# Configure environment
+cp .env.example .env
+# Edit .env with your Google credentials
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Access at http://localhost:3000
+```
+
+---
+
+## Google Calendar Setup Details
+
+The application automatically detects the correct OAuth redirect URI based on how you access it (localhost, Minikube IP, or custom domain). This means:
+
+- ✅ Works out of the box with `localhost:3000` after running `k8s/start.sh`
+- ✅ No need to configure multiple redirect URIs for different environments
+- ✅ Automatically handles port forwarding in Kubernetes
+
+**Important:** Google OAuth does not work with private IP addresses (like `192.168.x.x`). Always access the app via `localhost` when using Kubernetes with the provided start script.
 
 ---
 
