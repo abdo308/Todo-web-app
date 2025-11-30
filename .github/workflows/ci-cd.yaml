@@ -1,0 +1,104 @@
+name: pipe_line for to-do app
+run-name:  Pipeline ${{ github.run_id }} trigger action on ${{ github.event_name }}
+on:
+  push:
+    branches:
+      - main
+      - pipeline
+  pull_request:
+    branches:
+      - main
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests npm test
+        run: npm test
+      - name: install python 
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run python tests
+        run: |
+          python -m unittest discover -s tests
+      - name: Lint code
+        run: |
+          npm install eslint
+          npx eslint . --ext .js,.jsx,.ts,.tsx
+      - name: Security Check
+        run: |
+          npm install -g npm-audit-ci
+          npm-audit-ci --moderate
+      - name: python security check
+        run: |
+          pip install bandit
+          bandit -r .
+      - name: python lint check
+        run: |
+          pip install flake8
+          flake8 .
+      - name: python type check
+        run: |
+          pip install mypy
+          mypy .
+      - name: python code complexity check
+        run: |
+          pip install radon
+          radon cc . -a
+      - name: python dependency check
+        run: |
+          pip install safety
+          safety check
+      - name: python formatting check
+        run: |
+          pip install black
+          black --check .
+      - name: python docstring check
+        run: |
+          pip install pydocstyle
+          pydocstyle .
+      - name: python cyclomatic complexity check
+        run: |
+          pip install mccabe
+          python -m mccabe .
+      - name: python security vulnerability check
+        run: |
+              pip install bandit
+              bandit -r . 
+      - name: python code smells check
+        run: |
+              pip install pylint
+              pylint **/*.py
+      - name: python dead code check
+        run: |
+              pip install vulture
+              vulture . 
+      - name: python import sorting check
+        run: |
+              pip install isort
+              isort --check-only .
+      - name: python pytest
+        run: |
+              pip install pytest
+              pytest
+      - name: python unittest
+        run: |
+              pip install unittest2
+              python -m unittest discover -s tests  
+              
