@@ -14,189 +14,240 @@
 
 ## Project Overview
 
-A production-ready Todo application built to demonstrate enterprise DevOps practices. Features FastAPI backend with PostgreSQL database, containerized deployment, and comprehensive monitoring stack.
+A production-ready Todo application built to demonstrate enterprise DevOps practices and cloud-native architecture. This full-stack application showcases modern software development methodologies, containerization, orchestration, and comprehensive monitoring capabilities.
+
+### Key Features
+
+- **User Management**: Secure authentication with JWT tokens and bcrypt password hashing
+- **Task Management**: Full CRUD operations with priorities, due dates, and image attachments
+- **Google Calendar Integration**: Seamless task synchronization with Google Calendar
+- **Real-time Monitoring**: Prometheus metrics collection and Grafana dashboards
+- **Cloud-Native**: Kubernetes-ready with health checks, auto-scaling, and persistent storage
+- **CI/CD Pipeline**: Automated testing, building, and deployment workflows
 
 ---
 
-## Stakeholder Analysis
+## Technology Stack
 
-- **End Users:** Individuals who want to manage their personal or work-related tasks efficiently.
-- **DevOps Engineers:** Responsible for deploying, monitoring, and maintaining the application in production.
-- **Developers:** Maintain and extend the backend, frontend, and infrastructure code.
+### Backend
 
----
+- **FastAPI** — High-performance Python web framework
+- **PostgreSQL** — Relational database with ACID compliance
+- **JWT** — Secure token-based authentication
+- **Bcrypt** — Password hashing and security
 
-## Project Objectives
+### Frontend
 
-- **Kubernetes Orchestration**: Container management with auto-scaling
-- **CI/CD Pipeline**: Automated build, test, and deployment
-- **Monitoring & Observability**: Prometheus metrics and Grafana dashboards
-- **Infrastructure as Code**: Version-controlled infrastructure management
+- **React** — Modern UI library with component-based architecture
+- **Vite** — Fast build tool and development server
+- **Responsive Design** — Mobile-first approach
 
----
+### Infrastructure & DevOps
 
-## Technologies Used
+- **Kubernetes** — Container orchestration and deployment
+- **Docker** — Containerization with multi-stage builds
+- **Nginx** — Reverse proxy and load balancing
+- **Prometheus & Grafana** — Metrics collection and visualization
+- **Helm** — Kubernetes package management
 
-- **Kubernetes** (K8s) — Orchestration and deployment
-- **Docker** — Containerization for backend, frontend, and database
-- **Jenkins** — CI/CD pipeline automation
-- **FastAPI** — Python backend web framework
-- **React** (with Vite) — Frontend single-page application
-- **PostgreSQL** — Relational database
-- **Nginx** — Reverse proxy and static file serving
-- **Prometheus & Grafana** — Monitoring and observability (planned/mentioned)
-- **Google Calendar API** — Task synchronization to Google Calendar
+### Integration & APIs
 
-Other tools: docker-compose (local dev), GitHub Actions (mentioned), and standard DevOps/infra-as-code practices.
+- **Google Calendar API** — Task synchronization
+- **OAuth 2.0** — Secure third-party authentication
 
 ---
 
-## Project Scope
+## System Design & Architecture
 
-- FastAPI backend with PostgreSQL
-- Docker containerization with multi-stage builds
-- Kubernetes deployment with health checks
-- GitHub Actions CI/CD pipeline
-- Prometheus and Grafana monitoring stack
-- Security scanning and testing automation
+### Use Case Diagram
 
----
+The following use case diagram illustrates the main functionalities and interactions within the Todo application:
 
-## Project Plan
+![Use Case Diagram](./frontend/pages/assets/Use%20case%20diagram.png)
 
-### 🎯 **Core Implementation (Essential)**
+**Key Use Cases:**
 
-#### Week 1: Foundation
+- **User Authentication**: Users can sign up, log in, and manage their account credentials
+- **Task Management**: Core functionality including creating, reading, updating, and deleting tasks
+- **Task Organization**: Users can set priorities, due dates, and categorize tasks
+- **Task Enhancement**: Upload images and add detailed descriptions to tasks
+- **Calendar Integration**: Synchronize tasks with Google Calendar for cross-platform accessibility
+- **Profile Management**: Update user information and change passwords
+- **Task Filtering**: View tasks by status (All Tasks, Vital Tasks, Completed Tasks)
 
-- Making the backend structure (Abdalrhman Magdy)
-- Making dockerfile and docker compose (Abdalrhman Magdy)
-- Kubernetes manifests creation (Ahmed Sakr, Mahmoud Hanafy)
-- CI/CD pipeline setup (Mohamed Ezzat, Safiya)
-- Security scanning integration (Abdalrhman Magdy)
+### Entity-Relationship Diagram (ERD)
 
-#### Week 2: Monitoring Implementation
+The database schema is designed to support multi-user task management with comprehensive task attributes:
 
-- Prometheus metrics collection
-- Grafana dashboard creation
-- Alert management system
-- Performance testing integration
+![ERD Diagram](./frontend/pages/assets/ERD.png)
 
-#### Week 3: Production Deployment
+**Database Schema Overview:**
 
-- Cloud deployment (AWS/Azure)
-- Load balancing setup
-- Environment management
-- Documentation and testing
+**Users Table:**
 
-### 🚀 **Advanced Features (Bonus)**
+- Primary entity storing user account information
+- Fields: `id` (PK), `username`, `email`, `password_hash`, `created_at`, `updated_at`
+- Implements secure authentication with bcrypt password hashing
+- Supports JWT-based session management
 
-#### Bonus Week 1: Infrastructure Enhancement
+**Todos Table:**
 
-- Helm Charts - Kubernetes package management
-- Infrastructure as Code - Terraform for cloud resources
-- Secrets Management - HashiCorp Vault integration
+- Central table for task storage and management
+- Fields: `id` (PK), `user_id` (FK), `title`, `description`, `status`, `priority`, `due_date`, `created_at`, `updated_at`, `image_filename`
+- Status values: `pending`, `in_progress`, `completed`
+- Priority levels: `low`, `medium`, `high`
+- Supports optional image attachments stored on filesystem
 
-#### Bonus Week 2: Service Mesh & Networking
+**Relationships:**
 
-- Service Mesh - Istio for advanced networking
-- Network policies and security
-- Traffic management and routing
+- **One-to-Many**: Each User can have multiple Todos (1:N relationship)
+- **Foreign Key Constraint**: `todos.user_id` references `users.id` with cascade delete to maintain referential integrity
+- **Indexing Strategy**: Optimized queries on `user_id`, `status`, and `due_date` for efficient task retrieval
 
-#### Bonus Week 3: Observability & Performance
+This normalized database design ensures data integrity, prevents redundancy, and supports efficient querying for user-specific task management operations.
 
-- Distributed Tracing - Jaeger or Zipkin
-- Log Aggregation - ELK Stack (Elasticsearch, Logstash, Kibana)
-- APM Integration - Application Performance Monitoring
+### Sequence Diagram
 
-#### Bonus Week 4: Automation & GitOps
+The sequence diagram below demonstrates the complete request-response flow for critical user interactions within the application:
 
-- GitOps - ArgoCD for declarative deployments
-- Auto-scaling - KEDA for event-driven scaling
-- Chatbot Integration - Slack/Teams deployment notifications
+![Sequence Diagram](./frontend/pages/assets/Sequence%20diagram.png)
 
----
+**Key Interaction Flows:**
 
-## Database Design
+**1. User Authentication Flow:**
 
-- **User Table:**
-  - id (PK), username, email, password_hash, created_at, etc.
-- **Todo Table:**
-  - id (PK), user_id (FK), title, description, status, priority, due_date, created_at, image_filename, etc.
-- **Relationships:**
-  - One user can have many todos (one-to-many)
-  - Each todo references its owner via user_id (foreign key)
-    > See the 'Database Elements' section below for more details.
+- User submits login credentials through the frontend interface
+- Frontend sends authentication request to the backend API
+- Backend validates credentials against the PostgreSQL database
+- Upon successful validation, JWT token is generated and returned
+- Frontend stores the token and redirects user to the dashboard
+
+**2. Task Creation Flow:**
+
+- Authenticated user fills out task creation form (title, description, priority, due date)
+- Optional image upload is processed and validated on the client side
+- Frontend sends POST request with task data and JWT token to backend
+- Backend validates the token and user authorization
+- Task data is persisted in the PostgreSQL database
+- Image file (if provided) is stored in the filesystem with reference saved in database
+- Success response is returned with the newly created task object
+- Frontend updates the UI to display the new task
+
+**3. Task Retrieval Flow:**
+
+- User navigates to tasks page (Dashboard, My Tasks, or Vital Tasks)
+- Frontend requests task list with filter parameters and JWT token
+- Backend authenticates the request and queries database for user-specific tasks
+- Tasks are filtered by status, priority, or due date as requested
+- Database returns matching records
+- Backend serializes task data and sends response
+- Frontend renders tasks in the appropriate UI components
+
+**4. Google Calendar Sync Flow:**
+
+- User initiates calendar sync from the frontend
+- Frontend redirects to Google OAuth authorization endpoint
+- User grants calendar permissions
+- Google redirects back with authorization code
+- Backend exchanges code for access token and refresh token
+- Tokens are securely stored in the database
+- Backend fetches user's tasks and creates calendar events via Google Calendar API
+- Sync status is returned to frontend with confirmation
+
+This sequence-based architecture ensures secure, stateless communication between components while maintaining data consistency and user session integrity through JWT-based authentication.
 
 ---
 
 ## UI/UX Design
 
-- The UI/UX for this application is based on a Figma design.
-- The design emphasizes clarity, ease of use, and a modern look for both desktop and mobile users.
-- Key features:
-  - Sidebar navigation for quick access to Dashboard, Vital Tasks, My Tasks, and Profile
-  - Responsive layout for all devices
-  - Modal dialogs for editing, adding, and deleting tasks
-  - Visual feedback for actions (e.g., success messages, error notifications)
-  - Consistent color palette and typography
-  - [Figma Design](https://www.figma.com/design/UMVJ76GUV2N0TzZwLfEHw1/Task-Manager-webDesign--Community-?m=auto&t=LnZhDKu5Waao2cSF-6)
+The application features a modern, intuitive interface designed with user experience as the top priority:
+
+- **Responsive Layout**: Optimized for desktop, tablet, and mobile devices
+- **Sidebar Navigation**: Quick access to Dashboard, Vital Tasks, My Tasks, and Profile
+- **Interactive Modals**: Streamlined task creation, editing, and deletion workflows
+- **Visual Feedback**: Real-time notifications for user actions and system responses
+- **Consistent Design System**: Professional color palette and typography
+- **Accessibility**: WCAG-compliant design patterns
+
+[View Figma Design](https://www.figma.com/design/UMVJ76GUV2N0TzZwLfEHw1/Task-Manager-webDesign--Community-?m=auto&t=LnZhDKu5Waao2cSF-6)
 
 ---
 
-## Database Elements
+## Kubernetes Deployment Architecture
 
-The application uses a PostgreSQL database to store user accounts, todo tasks, and related data. The main elements are:
+The application follows a microservices architecture deployed on Kubernetes, with the following components and data flow:
 
-- **User Table**
-  - Stores user account information (username, email, password hash, etc.)
-  - Each user can have multiple todo tasks
-- **Todo Table**
-  - Stores individual todo tasks
-  - Fields include: title, description, status, priority, due date, creation date, image filename, etc.
-  - Each todo is linked to a user (owner)
-- **Authentication & Security**
-  - Passwords are securely hashed (bcrypt)
-  - JWT tokens are used for authentication
-- **Other Elements**
-  - Uploaded images are stored on disk (not in the database), with the database storing the filename/path
-    **Relationships:**
-- One-to-many: One user can have many todos
-- Each todo references its owner via a foreign key
+### Architecture Diagram
 
----
+![Kubernetes Architecture](./frontend/pages/assets/k8s.jpeg)
 
-## Kubernetes Deployment Flow
+The diagram above illustrates the complete Kubernetes architecture and request flow through the system. Here's how a user request travels through the infrastructure:
 
-When you launch the application on Kubernetes, the following flow occurs:
+**Request Flow Path:**
 
-1. **PostgreSQL Deployment**
-   - A Postgres pod is created to provide the database for the app.
-   - A PersistentVolumeClaim (PVC) ensures database data persists across pod restarts.
-2. **Backend Deployment (FastAPI)**
-   - The backend pod runs the FastAPI app, connecting to Postgres.
-   - A PVC is mounted at `/app/uploads` to persist uploaded files (images).
-   - The backend exposes API endpoints for authentication, todos, and file uploads.
-3. **Frontend Deployment (React/Vite)**
-   - The frontend pod serves the React single-page app (SPA) using a static server.
-   - The frontend communicates with the backend via internal cluster networking (service names).
-4. **Nginx Reverse Proxy**
-   - The Nginx pod acts as a reverse proxy for all external traffic.
-   - Nginx routes:
-     - `/auth/`, `/todos/`, `/uploads/` → backend service
-     - All other paths → frontend service
-   - Nginx is exposed via a NodePort or LoadBalancer, making the app accessible outside the cluster.
-5. **Service Discovery & Networking**
-   - Each component (frontend, backend, nginx, postgres) is exposed as a Kubernetes Service.
-   - Internal DNS allows pods to communicate using service names (e.g., `api`, `frontend`, `postgres`).
-6. **Persistence**
-   - Database data and uploaded files are stored on PVCs, so data survives pod restarts or rescheduling.
-7. **Scaling & Health**
-   - Deployments can be scaled (replica count) for frontend and backend.
-   - Readiness/liveness probes ensure only healthy pods receive traffic.
-8. **Access Flow**
-   - User accesses the app via the Nginx external URL (NodePort/LoadBalancer IP).
-   - Nginx proxies API and upload requests to the backend, and serves the frontend SPA for all other routes.
-   - The frontend app makes API calls to the backend through the same Nginx endpoint (same-origin).
+1. **External User Request**
+
+   - User accesses the application through their browser via the Nginx service endpoint
+   - Request enters the Kubernetes cluster through the exposed NodePort/LoadBalancer
+
+2. **Nginx Ingress Layer** (Entry Point)
+
+   - Nginx pod receives all incoming HTTP/HTTPS traffic
+   - Acts as reverse proxy and request router
+   - Routes based on URL path:
+     - API requests (`/auth/*`, `/todos/*`, `/uploads/*`) → Backend Service
+     - Static content and SPA routes → Frontend Service
+   - Provides load balancing across backend/frontend pods
+   - Handles SSL/TLS termination (if configured)
+
+3. **Frontend Service** (React Application)
+
+   - Serves the React single-page application (SPA)
+   - Deployed as containerized Vite build
+   - Handles client-side routing
+   - Sends API requests back through Nginx to backend
+   - Stateless deployment allowing horizontal scaling
+
+4. **Backend Service** (FastAPI Application)
+
+   - Processes business logic and API requests
+   - Validates JWT tokens for authentication
+   - Manages CRUD operations for tasks
+   - Handles file uploads to persistent storage
+   - Communicates with PostgreSQL for data operations
+   - Integrates with Google Calendar API for task synchronization
+   - Exposes Prometheus metrics endpoint for monitoring
+
+5. **PostgreSQL Database**
+
+   - Stores user accounts and task data
+   - Deployed with StatefulSet for data persistence
+   - Uses PersistentVolumeClaim (PVC) to ensure data survives pod restarts
+   - Internal service accessible only within the cluster
+   - Provides ACID-compliant data storage
+
+6. **Persistent Storage Layer**
+   - **Database PVC**: Stores PostgreSQL data files
+   - **Uploads PVC**: Stores user-uploaded task images
+   - Ensures data persistence across pod lifecycle events
+   - Supports volume expansion if needed
+
+**Response Flow:**
+
+- Backend queries database and processes request
+- Response travels back: Backend → Nginx → User
+- Frontend updates UI based on API responses
+
+**Key Kubernetes Features Utilized:**
+
+- **Services**: Enable pod-to-pod communication via DNS names
+- **Deployments**: Manage replica sets for frontend and backend
+- **StatefulSets**: Ensure stable storage for PostgreSQL
+- **PersistentVolumes**: Provide durable storage for database and uploads
+- **ConfigMaps**: Store Nginx configuration
+- **Secrets**: Securely store database credentials and API keys
+- **Health Probes**: Readiness and liveness checks ensure high availability
+- **Resource Limits**: CPU and memory constraints for optimal resource utilization
 
 ---
 
@@ -467,18 +518,44 @@ docker-compose up -d
 
 ---
 
-## Google Calendar Setup Details
+## Production Deployment
 
-The application automatically detects the correct OAuth redirect URI based on how you access it (localhost, Minikube IP, or custom domain). This means:
+The application is currently deployed and accessible at:
 
-- ✅ Works out of the box with `localhost:3000` after running `k8s/start.sh`
-- ✅ No need to configure multiple redirect URIs for different environments
-- ✅ Automatically handles port forwarding in Kubernetes
+**Live Demo**: http://16.171.23.59/
 
-**Important:** Google OAuth does not work with private IP addresses (like `192.168.x.x`). Always access the app via `localhost` when using Kubernetes with the provided start script.
+### Deployment Architecture
+
+- **Cloud Provider**: AWS
+- **Container Orchestration**: Kubernetes
+- **Monitoring**: Prometheus + Grafana
+- **Database**: PostgreSQL with persistent storage
+- **Load Balancing**: Nginx reverse proxy
 
 ---
 
-## Note
+## Contributing
 
-Note: Deployed in http://16.171.23.59/
+This project was developed as part of a DevOps engineering course to demonstrate enterprise-level practices in containerization, orchestration, and monitoring.
+
+### Team Members
+
+- **Abdalrhman Magdy** - Backend Architecture & DevOps
+- **Mohamed Ezzat** - CI/CD Pipeline & Infrastructure
+- **Safiya Mahmoud** - Infrastructure & Testing
+- **Mahmoud Hanafy** - Kubernetes & Deployment
+- **Ahmed Tarek** - Frontend & Integration
+
+---
+
+## License
+
+This project is created for educational purposes.
+
+---
+
+## Additional Notes
+
+### Google Calendar OAuth
+
+The application automatically detects the correct OAuth redirect URI. When using Kubernetes with port forwarding, always access via `localhost:3000` for proper OAuth functionality. Google OAuth does not work with private IP addresses (like `192.168.x.x`).
