@@ -22,7 +22,17 @@ jobs:
           node-version: '16'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd frontend
+          npm install
+      - name: Lint code
+        run: |
+          npm install eslint
+          npx eslint . --ext .js,.jsx,.ts,.tsx
+      - name: Security Check
+        run: |
+          npm install -g npm-audit-ci
+          npm-audit-ci --moderate
 
       - name: Run tests npm test
         run: npm test
@@ -32,19 +42,12 @@ jobs:
           python-version: '3.8'
       - name: Install dependencies
         run: |
+          cd ../backend
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run python tests
         run: |
           python -m unittest discover -s tests
-      - name: Lint code
-        run: |
-          npm install eslint
-          npx eslint . --ext .js,.jsx,.ts,.tsx
-      - name: Security Check
-        run: |
-          npm install -g npm-audit-ci
-          npm-audit-ci --moderate
       - name: python security check
         run: |
           pip install bandit
