@@ -28,6 +28,7 @@ jobs:
       - name: Lint code
         run: |
           cd frontend
+          npm install -D eslint @eslint/js eslint-plugin-react
           npm install eslint
           npx eslint . --ext .js,.jsx,.ts,.tsx
       - name: Security Check
