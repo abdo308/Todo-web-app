@@ -126,4 +126,20 @@ jobs:
               cd backend
               pip install unittest2
               python -m unittest discover -s tests  
-              
+      - name: docker login 
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+         context: ./
+         push: true
+         tags: mohamedezzat1/depi:${{ github.run_number }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+         context: ./frontend
+         push: true
+         tags: mohamedezzat1/depi:${{ github.run_number }}
