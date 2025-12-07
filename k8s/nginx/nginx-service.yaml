@@ -14,3 +14,7 @@ spec:
       protocol: TCP
       name: http
       nodePort: 30080
+    - port: 9113
+      targetPort: 9113
+      protocol: TCP
+      name: metrics

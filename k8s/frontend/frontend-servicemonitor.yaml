@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: frontend-exporter
+  namespace: monitoring
+  labels:
+    app: todo-frontend
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: todo-frontend
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

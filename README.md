@@ -522,11 +522,8 @@ docker-compose up -d
 
 The application is currently deployed and accessible at:
 
-**Live Demo**: http://16.171.23.59/
-
 ### Deployment Architecture
 
-- **Cloud Provider**: AWS
 - **Container Orchestration**: Kubernetes
 - **Monitoring**: Prometheus + Grafana
 - **Database**: PostgreSQL with persistent storage
