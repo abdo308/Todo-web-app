@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-exporter
+  namespace: monitoring
+  labels:
+    app: todo-nginx
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: todo-nginx
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
